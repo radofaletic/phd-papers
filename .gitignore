@@ -1,0 +1,30 @@
+# PDF files #
+#############
+abel.pdf
+Faletic.pdf
+
+# work files #
+##############
+*.out
+*.aux
+*.bbl
+*.blg
+*.dvi
+*.idx
+*.ilg
+*.ind
+*.log
+*.ps
+*.toc
+
+# OS generated files #
+######################
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.*~
+ehthumbs.db
+Thumbs.db
+*~

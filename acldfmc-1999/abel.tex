@@ -1,0 +1,723 @@
+\documentclass[twoside,twocolumn,a4paper]{article}
+\usepackage{graphics}
+\usepackage{hyperref}
+\usepackage{amsmath}
+\renewcommand{\columnsep}{10mm}
+\textheight=24.3cm
+\textwidth=16.0cm
+\newcommand{\picwidth}{7.45cm}
+\newcommand{\mpicwidth}{5.5875cm}
+\newcommand{\spicwidth}{3.725cm}
+\evensidemargin=-3mm %use as necessary for your printer
+\oddsidemargin=0mm   %use as necessary for your printer
+\topmargin=-17mm     %use as necessary for your printer
+%\pagestyle{empty}
+\pagestyle{plain}
+\font\AFMCcl=cmssbx10 
+\font\AFMCab=cmssbx10
+\font\AFMCan=cmss10
+\font\AFMChb=cmssbx10 scaled 900
+\font\AFMCfg=cmss10 scaled 900
+\font\AFMCnormal=cmr9
+\font\AFMCfoot=cmr8
+\setlength{\unitlength}{1in}
+
+% find out if we're running PDFLaTeX or just plain old LaTeX so that
+% we know whether to include EPS or PDF image files.
+\newif\ifpdf
+\ifx\pdfoutput\undefined
+	\pdffalse	% we are not running PDFLaTeX
+\else
+	\pdfoutput=1	% we are running PDFLaTeX
+	\pdftrue
+\fi
+
+% if we are using PDFLaTeX then include some PDF document information
+\ifpdf
+\pdfinfo {
+	/Title		(INTERFEROMETRIC MEASUREMENT OF AN AXI-SYMMETRIC DENSITY FIELD)
+	/Author		(A. F. P. Houwing, K. Takayama, K. Koremoto, T. Hashimoto, R. Faletic, M. Gaston)
+	/Subject	(paper for the 2nd Australian Conference on Laser Diagnostics in Fluid Mechanics and Combustion, Monash University, Melbourne, Australia, 9-10 December 1999)
+	/Keywords	(density, axi-symmetric, interferometer, phase, Fourier, Abel, deconvolutation, tomography)
+}
+\fi
+
+\begin{document}
+
+\setcounter{page}{111}
+
+\title{
+\sffamily \bfseries \large{INTERFEROMETRIC MEASUREMENT OF \\
+AN AXI-SYMMETRIC DENSITY FIELD}}
+\vspace{10mm}
+\author{
+\AFMCab \href{mailto:Frank.Houwing@anu.edu.au}{A.~F.~P. Houwing}, K.~Takayama\thanks{Shock Wave Research Center, Institute of Fluid Science, Tohoku University, Sendai, JAPAN}\ , K.~Koremoto$^*$, T.~Hashimoto$^*$, \href{mailto:Rado.Faletic@anu.edu.au}{R.~Faleti\v{c}}, \href{mailto:Matt.Gaston@eng.uts.edu.au}{M.~Gaston}\thanks{School of Aerospace and Mechanical Engineering, University College, University of New South Wales, Australian Defence Force Academy, Canberra, AUSTRALIA} \\
+\AFMCan \\
+\AFMCan \href{http://www.anu.edu.au/Physics/aldir/}{Aerophysics and Laser-based Diagnostics Research Laboratories} \\
+\AFMCan \href{http://www.anu.edu.au/Physics/}{Department of Physics}, \href{http://www.anu.edu.au/science/}{Faculty of Science} \\
+\AFMCan \href{http://www.anu.edu.au/}{Australian National University}, \href{http://www.canberratourism.com.au/}{Canberra}, \href{http://www.fed.gov.au/}{AUSTRALIA}
+\vspace *{10mm}
+}
+\date{}
+\maketitle
+%\thispagestyle{empty}
+\noindent
+{\AFMChb ABSTRACT}
+\begin{picture}(0,0)(0,0)
+\put(-0.75,3.1){\small \it \href{http://www-mec.eng.monash.edu.au/ACLDFMC/}{2nd Australian Conference on Laser Diagnostics in Fluid Mechanics and Combustion} } 
+\put(-0.75,2.97){\small \it \href{http://www.monash.edu.au/}{Monash University}, \href{http://www.melbourne.org/}{Melbourne}, \href{http://www.fed.gov.au/}{Australia}}
+\put(-0.75,2.84){\small \it 9-10 December 1999 }
+\end{picture}
+
+\AFMCnormal
+\noindent We have used Fourier transform techniques and an Abel deconvolution to analyse a finite-fringe interferogram produced by an axisymmetric shock wave flow, to produce a density map that can be used for the validation of a
+numerical model. The Abel deconvolution method enables the
+use of a basis that is particularly suitable for modeling
+phase maps produced by shock wave flows. A steady flow
+problem is studied, and compared with a numerical simulation. Good
+agreement between theoretical and experimental results are obtained.
+
+\noindent
+{\\ \AFMChb INTRODUCTION}
+
+\noindent Optical diagnostic techniques are very important for studying flows
+produced in shock tubes and shock tunnels. The need to use
+optically-based methods arises from the fact that the physical placement
+of measurement probes within supersonic flows significantly perturbs the
+flow and, in some cases, the variables one is trying to measure. Hence
+the desire for non-intrusive techniques leads to the need to measure the
+light that the flow radiates (emission, fluorescence etc), absorbs
+(absorption), or deflects (schlieren, interferometry). In this paper, we
+discuss a holographic interferometric method used to measure the density
+distribution in an axially-symmetric flow in a shock tunnels for the purpose
+of comparison with a numerical model.
+
+\noindent Holography is a useful diagnostic for visualising and analysing a
+variety of physical and engineering problems$^6$, while
+holographic interferometry is particularly useful for density
+measurements in flows produced by complex shock wave
+configurations$^{13}$. In general, 
+interferometry, using different techniques including Mach-Zehnder
+interferometry, Michelson interferometry, and holographic
+interferometry, has been very useful for providing data against which
+computational fluid dynamic (CFD) simulation can be compared. In the
+case of two-dimensional flows, comparisons between CFD and experiment is
+reasonably straight-forward, since fringes in infinite-fringe
+interferograms correspond directly to density contours$^8$.
+In the case of axisymmetric or three-dimensional flows such fringes no
+longer correspond to density contours and a direct comparison between
+theoretical and experimental density is no longer possible. Under such
+circumstances, post-processing of the CFD data is often performed to produce
+theoretical interferograms against which the experimental ones can be
+compared$^{4,9}$. This approach is also quite
+successful. However, in all cases (two-dimensional, axisymmetric, and
+three-dimensional), spurious contributions to the phase shift can
+sometimes cause problems when attempting to interpret the data on
+infinite-fringe interferograms. In addition, the spatial resolution is
+limited by the fringe spacing,
+which can be quite large when dealing with low density flows and/or
+small optical path lengths. To overcome both of these difficulties,
+finite-fringe interferometry, accompanied by a good interferogram
+analysis technique, is arguably the best solution. 
+
+\noindent In the case of three-dimensional flows, extracting density
+information from the projected phase distributions is difficult because density
+changes along the line-of-sight are averaged through the integration of
+the refractive index along this direction. For complex three-dimensional
+flows, tomographic reconstruction techniques are
+required$^{12}$. In the case of axisymmetric flows, this
+reconstruction reduces to an Abel deconvolution$^5$. In
+this paper, we present the results from an experiment involving a flow that
+possesses this symmetry property.
+
+\noindent
+{\\ \AFMChb FINITE FRINGE HOLOGRAPHIC INTERFEROMETRY}
+
+\noindent The work discussed in this paper is based on the application of
+finite-fringe double-exposure holographic
+interferometry$^{13}$, a brief description of which is
+presented in this section. A beam from a pulsed laser is split into two beams
+by a beam-splitter to form the object and reference beams.
+Infinite-fringe holograms are produced by keeping the optics for both
+the reference and object beam fixed between exposures. If the reference
+beam is tilted through a small angle between exposures, a finite-fringe
+interferogram is produced. The first exposure is made before the test event, 
+and the second exposure is made during the test event. For finite-fringe
+interferometry the displacement of the reference beam
+adds a linearly varying phase shift, that superimposes a
+hetrodyning frequency over the whole image. 
+
+\noindent
+{\\ \AFMChb OVERVIEW OF INTERFEROGRAM ANALYSIS}
+
+
+\noindent The interferogram analysis technique used
+in the current work is a two-dimensional Fourier-based
+method$^{2,3,1}$,
+which consists of the following steps:
+%
+\begin{enumerate}
+%
+\item{apply the two-dimensional Fourier transform to the intensity
+distribution in the interferogram
+to produce both positive and negative frequency components};
+%
+\item{apply a filter operation in the Fourier transform plane
+to remove noise and to select only the positive frequency
+components};
+%
+\item{perform a frequency shift in the Fourier transform plane, so
+that the data is located around the origin};
+%
+\item{apply the two-dimensional inverse Fourier transform to produce
+real and imaginary parts of the frequency-shifted and filtered
+intensity};
+%
+\item{determine the phase by evaluating the arctangent of the ratio of
+the imaginary and real parts of the inverse transform};
+%
+\item{{\em `unwrap'} the phase by adding multiples of $2\pi$ where
+required}; and
+%
+\item{remove any residual background phase}.
+%
+\end{enumerate}
+%
+The second step is required to remove both low and
+high frequency noise from the data. By removing the negative frequency
+components of the Fourier transform, this step also ensures that the
+complex form of the intensity is produced through the application of the
+inverse Fourier transform in step 4. The third step removes the carrier,
+or hetrodyning, frequency. Of the above steps, the sixth is the most
+difficult, and requires a sophisticated search algorithm$^3$. 
+
+\noindent
+{\\ \AFMChb DETERMINING THE DENSITY FROM THE UNWRAPPED PHASE}
+
+\noindent In axisymmetric flows the projected phase $\phi(y,z)$ is the
+summation of refractive index along the line of sight, which can be
+represented by
+%
+\begin{equation}
+\phi(y,z) - \phi_{r\! e\! f} =
+\frac {2\pi}{\lambda}
+\int [n_{r\! e\! f}-n_{f\! l\! o\! w}(\sqrt{x^2+y^2},z)]  \, dx \; , 
+\label{eqn:phase_integral}
+\end{equation}
+%
+where $dx$ is the incremental path length through the phase-shifting
+medium. $\lambda$ is the wavelength of the light, and
+$n$ is the refractive index. Here $y$ and $z$ are coordinates in an
+$xyz$ Cartesian coordinate system, with $x$ in the direction of the
+line-of-sight, and flow properties depend only on the values of $y$ and
+$z$. The subscripts {\emph{ref}} and {\emph{flow}} refer to `reference'
+and `flow' conditions, respectively. For a perfect gas of uniform
+composition, the refractive index can be related directly to the
+density, $\rho$, of the gas and its value at a standard
+density$^{11}$, ${\rho_s}$,
+%
+\begin{equation}
+n = 1 + \beta \frac{\rho}{\rho_s}
+\label{eqn:beta}\; . %\eqno(8)
+\end{equation}
+%
+Values for $\beta$ and $\rho_s$ for the gases used in the current work
+are available in the literature$^{11}$. Using the above
+equations, the density of the flow is determined to be given by
+%
+\begin{equation}
+\rho _{f\! l\! o\! w}-\rho _{r\! e\! f}=
+{{\lambda \rho _s} \over {2\pi W\beta }}
+\left( {\phi _{r\! e\! f}-\phi _{f\! l\! o\! w}} \right) .
+\label{eqn:density_2d}
+\end{equation}
+The integral in
+Eq.~\ref{eqn:phase_integral} is the Abel transform$^5$ of
+$\frac{\pi }{\lambda }\left[ {n_{r\! e\! f}  - n_{f\! l\! o\! w} \left( { \cdot ,z} \right)} \right]$.
+Here, we will adopt a cylindrical polar coordinate
+system, with the $z$-coordinate (axial coordinate) measured along the
+axis of symmetry and $r$-coordinate (radial coordinate) measured along
+radii centered on the axis of symmetry. The inverse Abel transform can be
+used to write the radial
+distribution of the refractive index in terms of the projected phase as
+follows$^5$,
+\begin{equation}
+n_{r\! e\! f} - n_{f\! l\! o\! w}(r,z) =
+\frac{-\lambda}{2\pi^2} \int_{r}^{\infty}[\frac{1}{\sqrt{y^2-r^2}}
+\frac{d\phi(y,z)}{dy}] \, dy \; . 
+\label{eqn:Abel1}
+\end{equation}
+
+\noindent Using Eqs.~\ref{eqn:beta}~and~\ref{eqn:Abel1}, it is possible to
+determine the radial density distribution. In some cases, the phase data
+can be fitted to a linear combination of basis functions for which the
+analytic solutions to Eq.~\ref{eqn:Abel1} are known. The density is then
+readily determined by the same linear combination of the deconvoluted
+basis functions$^5$. This approach is a more efficient and,
+often, a more accurate way of performing the deconvolution than through
+direct numerical evaluation of the integral in Eq.~\ref{eqn:Abel1}. For
+example, certain bases  are well-suited to the fitting of the
+projected phase distributions resulting from the discontinuous jumps
+across shock waves. This is the approach used in the current work.
+
+\noindent We assume that the refractive index distribution, 
+$n_{f\! l\! o\! w}(r,z) - n_{r\! e\! f}$ can be described
+by a function $f\left( r, z \right)$, which, for a given value of $z$,
+can be approximated by a linear combination of basis functions,
+$f_i\left( r, z \right)$,
+%
+\begin{equation}
+n_{f\! l\! o\! w}(r,z) - n_{r\! e\! f} =
+f\left( r, z \right) \approx
+\sum\limits_i {c_i\left(z \right) f_i\left( r, z \right)} \; ,
+\label{eqn:f_rz_sum}
+\end{equation}
+%
+where $c_i\left(z \right)$ are fitting coefficients for a particular
+axial location $z$ and where the basis functions
+$f_i\left( r, z \right)$ can depend also on the value of $z$.
+
+\noindent The integral of the refractive index along the line of sight is then given
+by$^5$
+%
+\begin{equation}
+f_A\left( y, z \right)  \approx
+\sum\limits_i {c_i\left(z \right) f_{A,i}\left( y, z \right)} \; ,
+\label{eqn:f_A_rz_sum}
+\end{equation}
+%
+where ${f_{A,i}\left( y, z \right)}$ are the Abel transforms of the basis
+functions ${f_i\left( r, z \right)}$.
+The type of density variations expected will influence the choice of basis,
+while the number of functions depends on the required
+accuracy, resolution of the original data and computational restrictions.
+Here, we use five functions, which we will refer to as the
+{\em ``well-suited''} basis,
+$f_1\left( r, z \right), \dots, f_5\left( r, z \right)$, 
+as defined below:
+\begin{equation}
+f_1\left( r, z \right)=\Pi \left( {r/ 2a(z)} \right) \; ;
+\label{eqn:f1}
+\end{equation}
+\begin{equation}
+f_2\left( r, z \right)=
+\left( {a(z)^2-r^2} \right)^{-{1 \over 2}}\Pi \left( {r/ 2a(z)} \right) \; ;
+\label{eqn:f2}
+\end{equation}
+\begin{equation}
+f_3\left( r, z \right)=
+\left( {a(z)^2-r^2} \right)^{{1 \over 2}}\Pi \left( {r/ 2a(z)} \right) \; ;
+\label{eqn:f3}
+\end{equation}
+\begin{equation}
+f_4\left( r, z \right)=
+\left( {a(z)^2-r^2} \right)\Pi \left( {r/ 2a(z)} \right) \; ;
+\label{eqn:f4}
+\end{equation}
+\begin{equation}
+f_5\left( r, z \right)=
+\left( {a(z)^2-r^2} \right)^{{3 \over 2}}\Pi \left( {r/ 2a(z)} \right) \; ;
+\label{eqn:f5}
+\end{equation}
+where $a(z)$ is the radial position of the shock for a given value of $z$
+and $\Pi \left( {\zeta} \right) = 1$ if $|\zeta| < \frac{1}{2}$
+and
+$\Pi \left( {\zeta} \right) = 0$ if $|\zeta| \ge \frac{1}{2}$.
+
+\noindent Using Eq.~\ref{eqn:phase_integral}, the coefficients
+$c_i\left(z\right)$ and the value of $a(z)$ at each value of $z$ are determined by
+fitting the phase to the experimentally determined phase distribution,
+$\phi \left( y, z \right) -\phi_{r\! e\! f}$,
+according to the equation:
+%
+\begin{equation}
+f_A\left( y, z \right) =
+\frac {\lambda}{2\pi} 
+\left[ \phi \left( y, z \right) -\phi_{r\! e\! f} \right]  \; .
+\label{eqn:fitting}
+\end{equation}
+%
+The values of $c_i\left(z\right)$ and $a(z)$ are determined by treating them as free
+parameters in a least squares fitting routine that minimises the value of
+$\sum\limits_j {
+\left( f_A\left( y, z \right) - \frac {\lambda}{2\pi}
+\left[ \phi \left( y, z \right) -\phi_{r\! e\! f} \right]
+\right)^2_j}$,
+where the summation is over the fitted data points for a given value of z.
+Once these values are determined, $f\left( r, z \right)$ can be evaluated
+from Eq.~\ref{eqn:f_rz_sum}, and the density is given by
+%
+$%\begin{equation}
+\rho\left( r, z \right) = \frac{\rho_s}{\beta} f\left( r, z \right)
++ \rho_{r\! e\! f}  \; .
+$%\end{equation}
+
+
+\noindent
+{\\ \AFMChb EXPERIMENT}
+
+\noindent We studied a steady flow produced by a hypersonic
+flow incident upon a stationary axisymmetric body. This experiment was
+carried out in a free-piston shock
+tunnel$^{10}$. The axisymmetric body used was a spherically-blunted
+cylinder with a diameter of 50~mm, whose axis was aligned with the axis
+of symmetry of the incident flow. The model was placed centrally within
+the inviscid core flow downstream of the nozzle (130~mm exit diameter) of the shock tunnel. The inviscid core
+was estimated from pitot pressure measurements to be approximately
+100~mm in diameter.
+
+\noindent The test gas was partially dissociated air,
+the specific total enthalpy of the flow was 4.78~MJ/kg, and
+the speed, density, static pressure, and static temperature in the
+freestream were 2.75~km/s, 0.02~kg/m$^3$, 2.26~kPa, and 387~K,
+respectively, with uncertainties of $\pm$~5\%.
+The theoretical calculations used in the current work assume
+that the flow remains in thermal equilibrium during the expansion
+through the shock tunnel's nozzle. That is, the rotational and
+vibrational temperatures are assumed equal. Based on this assumption, we
+can approximate the supersonic flow at the exit of the nozzle as the
+flow of an ideal gas with a ratio of specific heats of 1.33. The
+assumption of thermal equilibrium is expected to result in systematic
+errors in the calculated flow conditions as vibrational non-equilibrium
+effects are expected to be important in the nozzle flow. 
+
+\noindent
+{\\ \AFMChb INTERFEROGRAM}
+
+\noindent A finite fringe interferogram produced in the experiment is shown
+in Fig.~\ref{fig:inter_hyper}.
+A portion of an interferogram shows a continuous fringe shift across the
+shock. This is a consequence of the axial symmetry of the flow. The
+interferogram is the result of integration along the line of sight,
+which produces a projection on the holograms
+that effectively locates the shock position in a symmetry plane of the
+flow, where the shock is at its most-upstream location. The optical path
+length through the shock layer, directly behind the shock front in this
+symmetry plane, is zero, and continuously increases with distance
+downstream. Thus, even though there is a discontinuous density jump
+across the shock, the phase shift changes continuously across the shock.
+\begin{figure}[!h]
+\begin{center}
+{\sc
+\resizebox{\picwidth}{!}{
+\ifpdf
+\includegraphics{sphere_inter_high_het.pdf}
+\else
+\includegraphics[158,258][452,533]{sphere_inter_high_het.eps}
+\fi
+}
+}
+\end{center}
+\caption{A portion of an interferogram of hypersonic flow over a spherically-blunted cylinder.}
+\label{fig:inter_hyper}
+\end{figure}
+
+\noindent
+{\\ \AFMChb PHASE MAP}
+
+\noindent The experimental phase
+data for the flow is given in
+Fig.~\ref{fig:spheretop_phasecor_image}.
+This was generated using the finite-fringe interferogram analysis technique
+described above.
+This phase map is used to determine the flow density.
+\begin{figure}[!h]
+\begin{center}
+{\sc
+\resizebox{\mpicwidth}{!}{
+\ifpdf
+\includegraphics{spheretop_phasecor_image.pdf}
+\else
+\includegraphics[75,186][630,571]{spheretop_phasecor_image.eps}
+\fi
+}
+}
+\end{center}
+\caption{Experimental phase map for flow over spherically-blunted cylinder.}
+\label{fig:spheretop_phasecor_image}
+\end{figure}
+
+\noindent
+{\\ \AFMChb FLOW DENSITY}
+
+\noindent
+{\AFMChb {Deconvolution with a well-suited basis}}
+
+\noindent Here we analyse the data using the well-suited basis described
+above. The first step in this
+process involves fitting the experimental phase maps to the sum of basis
+functions as given by Eq.~\ref{eqn:f_A_rz_sum}. 
+To perform this we use a least-squares fitting algorithm. The
+density maps determined from the deconvolution of the best fit
+to the phase data is displayed in Fig.~\ref{fig:spheretop_density_image}.
+Profiles along different cuts in this image is presented in
+Fig.~\ref{fig:spheretop_density_cuts}.
+The most notable feature of these results is that the sharp density jumps
+across the shocks have been well resolved.
+\begin{figure}[!h]
+\begin{center}
+{\sc
+\resizebox{\spicwidth}{!}{
+\ifpdf
+\includegraphics{spheretop_density_image.pdf}
+\else
+\includegraphics[80,93][479,748]{spheretop_density_image.eps}
+\fi
+}
+}
+\end{center}
+\caption{Density map for flow over spherically-blunted cylinder.}
+\label{fig:spheretop_density_image}
+\end{figure}
+\begin{figure}[!h]
+\begin{center}
+{\sc
+\resizebox{\picwidth}{!}{
+\ifpdf
+\includegraphics{spheretop_density_cuts.pdf}
+\else
+\includegraphics[26,74][572,701]{spheretop_density_cuts.eps}
+\fi
+}
+}
+\end{center}
+\caption{Density profiles for flow over spherically-blunted cylinder.}
+\label{fig:spheretop_density_cuts}
+\end{figure}
+
+\noindent Another observation is that, for some of the results, an overshoot
+occurs near the shock front. This is related to the difficulty of
+fitting the phase accurately close to the shock front, which is in turn
+related to the uncertainty in locating the radial position $a(z)$ of the
+shock front. This comes about as follows: the fitting algorithm used in
+the current work experienced difficulties in iterating towards the best
+value for the radial position $a(z)$ of the shock. It was found that
+when $a(z)$ was used as a free parameter in the fitting algorithm, the
+algorithm failed to converge to a solution for the fitting coefficients.
+To overcome this problem, we modified the fitting technique so that the
+shock position was found first. Because of the continuous change in the
+projected phase across a shock in an axisymmetric flow, and because of
+non-zero noise levels, there will be an error associated with finding
+the value of $a(z) = r_{shock}(z)$. This error contributes to errors in
+the fitted function, with the largest errors occurring within two or
+three pixels of the shock front. This error will
+sometimes cause an {\emph {overshoot}} in the value of the density at
+the shock front, however, this overshoot rapidly decays back down to the
+expected value of the post-shock density as one moves away from the
+shock front.
+
+\noindent
+{\AFMChb {Comparison with deconvolution using a polynomial basis}}
+
+\noindent Figure~\ref{fig:spheretop_density_cuts_compare}
+compares density profiles obtained using fifth order polynomial basis
+functions with those obtained using the well-suited basis.
+From these comparisons, two distinct differences are immediately obvious.
+Firstly, the deconvolution using the well-suited basis is more
+successful at reproducing the sharp density rises across the shock than the
+deconvolution using the polynomial basis. Secondly, the
+deconvolution using the well-suited basis results in larger
+values for the post-shock density than the deconvolution using the
+polynomial basis. 
+\begin{figure}[!h]
+\begin{center}
+{\sc
+\resizebox{\picwidth}{!}{
+\ifpdf
+\includegraphics{spheretop_density_cuts_compare.pdf}
+\else
+\includegraphics[34,78][571,490]{spheretop_density_cuts_compare.eps}
+\fi
+}
+}
+\end{center}
+\caption{Comparisons of profiles of density obtained using different bases for the hypersonic flow over spherically-blunted cylinder.}
+\label{fig:spheretop_density_cuts_compare}
+\end{figure}
+
+\noindent These differences can be attributed to the spanning properties
+of both basis sets, that is, the distinctive shapes of the functions involved.
+The suitability of any particular basis can be indicated by firstly, the
+overlap (inner product) of each basis function with the object in
+question, and secondly, by the difference (orthogonality) of each basis
+function with each other basis function. The first property ensures that
+the basis has common features with the object, and the second property
+ensures that each basis function is sufficiently different so to be able
+to resolve as many of the object features as possible. In our flow, the
+most notable feature is the shock wave, which can be broadly described
+as a step function, hence the inclusion of the function in Eq.~\ref{eqn:f1} to the well-suited basis.
+The polynomial basis does not include such a function, hence it is expected
+that it will poorly resolve any step function, as indicated in
+Fig.~\ref{fig:spheretop_density_cuts_compare}. With both bases the
+functions involved are sufficiently different as to be able to resolve some
+of the smaller features in the flow.
+
+\noindent
+{\\ \AFMChb NUMERICAL METHOD}
+
+\noindent To solve the steady shock layer for the flow over
+the spherically-blunted cylinder, we used the compressible flow solver,
+CFD-FASTRAN$^{\textrm{TM}}$ $^7$. 
+This solver is a finite volume, density-based
+method, that can use either Roe, Van Leer, or flux splitting algorithms.
+It is capable of implementing higher order differencing schemes
+(up to third order), including Min-Mod, Osher-Chakravarthy, MUSCL, and Van Leer
+limiters.  Different types of turbulence models
+($k-\epsilon$, $k-\omega$, Baldwin-Lomax) can be used, and a number
+of time integration schemes can be adopted.  However, for
+the case described here, only steady inviscid calculations were made
+for the flow. The result of the calculation is shown in
+Fig.~\ref{fig:hemi_theory}.
+\begin{figure}[!h]
+\begin{center}
+{\sc
+\resizebox{\spicwidth}{!}{
+\ifpdf
+\includegraphics{hemi.pdf}
+\else
+\includegraphics[2,110][617,731]{hemi.eps}
+\fi
+}
+}
+\end{center}
+\caption{Theoretical density results for steady flow over spherically-blunted cylinder. Calculation performed using the code CFD-FASTRAN$^{\textrm{TM}}$ $^7$.}
+\label{fig:hemi_theory}
+\end{figure}
+
+\noindent
+{\\ \AFMChb COMPARISON OF CFD AND EXPERIMENTAL RESULTS}
+
+\noindent Figure~\ref{fig:spheretop_density_cuts_new}
+shows theoretical and experimental density profiles for the flow.
+Profiles are presented for axial cuts at different radial positions.
+Apart from the very large overshoot close to the shock vertex, agreement
+between theory and experiment is very good. Cuts at $r$ = 5 and 10~mm are
+close to the stagnation region, where the density is essentially constant.
+Cuts at $r$ = 20, 25 and 30~mm are through both the shock wave and the
+expansion wave near the shoulder of the model, for which the density
+rises sharply across the shock and decreases continuously through the
+expansion wave. These trends are observed in both the CFD and
+experimental results and the CFD code correctly predicts the shock
+standoff distance from the model surface, providing confidence in the
+accuracy of the CFD modeling for these conditions. Quantitative
+agreement between the measured and calculated density is also very good.
+\begin{figure}[!h]
+\begin{center}
+{\sc
+\resizebox{\picwidth}{!}{
+\ifpdf
+\includegraphics{spheretop_density_cuts_new.pdf}
+\else
+\includegraphics[-61,34][562,745]{spheretop_density_cuts_new.eps}
+\fi
+}
+}
+\end{center}
+\caption{Density profiles for flow over spherically-blunted cylinder: theoretical and experimental results.}
+\label{fig:spheretop_density_cuts_new}
+\end{figure}
+
+\noindent Based on the uncertainties in the measured primary shock speed
+and the nozzle reservoir pressure, we expect a systematic uncertainty of
+approximately $\pm$~5\% in the CFD-calculated density distribution.
+Provided sufficient data points are available for accurate fitting to
+the phase distribution, and neglecting the overshoot problem close to
+the shock front, random and systematic errors from the interferometric
+measurements of density are estimated to be less than 1\%. However,
+within 2 or 3 pixels (less than 1~mm) of the shock front, errors of the
+order of 100\% can sometimes be encountered due to the overshoot problem,
+as discussed above.
+
+\noindent
+{\\ \AFMChb CONCLUSIONS}
+
+\noindent We have demonstrated the use of a well-suited basis, to
+deconvolute shock wave phase data produced in an axisymmetric flow, to
+determine the density. The method has
+been successful in resolving the discontinuous density changes across
+the shock wave in the flow studied. A CFD simulation has
+been discussed and the result from this simulation has been successfully
+compared with the experimental result. The good quantitative agreement
+between the CFD and experimental result gives confidence in the
+validity of the CFD model investigated.
+
+\noindent
+{\\ \AFMChb ACKNOWLEDGMENTS}
+
+\noindent We thank O.~Onodera, T.~Ogawa and H.~Ojima for
+their technical and professional expertise in assisting to conduct the
+experiment described in this paper. We also express our appreciation to
+H.~Babinsky for making available the source listings of his
+algorithms on which part of the work reported here is based. 
+\href{mailto:Frank.Houwing@anu.edu.au}{A.~F.~P. Houwing} gratefully
+acknowledges the support given to
+him as Visiting Professor at the
+\href{http://ceres.ifs.tohoku.ac.jp/~swrc/}{Shock Wave Research Center} at the
+\href{http://ifs.tohoku.ac.jp/}{Institute of Fluid Science} at
+\href{http://www.tohoku.ac.jp/}{Tohoku University} in
+\href{http://www.city.sendai.jp/index-e.html}{Sendai} to participate
+in the collaborative research project described in this paper. 
+
+\ 
+
+\noindent
+{\\ \AFMChb  REFERENCES}
+
+\noindent
+$^1$\hspace{1pt} BABINSKY, H. and TAKAYAMA, K., ``Quantitative holographic interferometry of shock-wave flows using Fourier transform fringe analysis'',
+{\it Proc. 20th Intn. Sym. Shock Waves}, {\it Pasadena July 1995}, {\it World Scientific Press}, 1599-1604, 1995
+
+\noindent
+$^2$\hspace{1pt} BONE, D.~J., BACHOR, H.~A., and SANDEMAN, R.~J., ``Fringe-pattern analysis using a 2-D Fourier transform'',
+{\it Applied Optics}, {\bf 25}(10), 1653-1660, 1986.
+
+\noindent
+$^3$\hspace{1pt} BONE, D.~J., ``Fourier fringe analysis -- the two-dimensional phase unwrapping problem'',
+{\it Applied Optics}, {\bf 30}(25), 3627-3632, 1991.
+
+\noindent
+$^4$\hspace{1pt} BOYCE, R.~R.,MORTON, J.~W., HOUWING, A.~F.~P., MUNDT, Ch., and BONE, D.~J., ``CFD validation using multiple interferometric views of three-dimensional shock layer flows over a blunt body'', 
+{\it Journal of Spacecraft and Rockets}, {\bf 33}(3), 319--325, 1994
+
+\noindent
+$^5$\hspace{1pt} BRACEWELL, R.~N., ``The Fourier transform and its applications'', 
+{\it New York: McGraw-Hill Book Company}, 264, 1965.
+
+\noindent
+$^6$\hspace{1pt} CAUFIELD, H.~J., ``Handbook of optical holography'',
+{\it Academic Press}, 475, 1979.
+
+\noindent
+$^7$\hspace{1pt} CFD-FASTRAN$^{\textrm{TM}}$,
+{\it CFD Research Corporation}, \href{http://www.cfdrc.com/}{http://www.cfdrc.com/}.
+
+\noindent
+$^8$\hspace{1pt} HORNUNG, H.~G., ``Non-equilibrium dissociating nitrogen flow over spheres and circular cylinders'',
+{\it J. Fluid Mech.}, {\bf 53}, 149--176, 1972.
+
+\noindent
+$^9$\hspace{1pt} JIANG, Z., ONODERA, O., and TAKAYAMA, K., ``Evolution of shock waves and the primary vortex loop discharged from a square cross-sectional tube'',
+{\it Shock Wave Journal}, {\bf 9}, 1--10, 1999.
+
+\noindent
+$^{10}$\hspace{1pt} KOREMOTO, K., ``Optimization of the characteristics of a free-piston shock tunnel'',
+{\it PhD Thesis}, {\it Tohoku University}, 1999.
+
+\noindent
+$^{11}$\hspace{1pt} LIEPMANN, H.~W. and ROSHKO, A., ``Elements of gasdynamics'',
+{\it John Wiley and Sons Inc}, 154, 1957.
+
+\noindent
+$^{12}$\hspace{1pt} MORTON, J.~W., HOUWING, A.~F.~P., BOYCE, R.~R., and BONE, D.~J., ``Tomographic reconstruction of jet and shock layer flows'',
+{\it Proc. 21st International Symposium on Shock waves}, {\it Australia}, {\it Panther Printing and Publishing Canberra}, 435--440, 1998.
+
+\noindent
+$^{13}$\hspace{1pt} TAKAYAMA, K., ``Application of holographic interferometry to shock wave research'',
+{\it Proc. of the Society of Photo-Optical Instrumentation Engineers}, {
+\bf 398}, 174--180, 1983.
+
+\noindent
+$^{14}$\hspace{1pt} VARDAVAS, I.~M., ``Modeling reactive gas flows within shock tunnels'',
+{\it Aust. J. Phys.}, {\bf 37}, 157--177, 1984.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}

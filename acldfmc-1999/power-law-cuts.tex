@@ -1,0 +1,84 @@
+\documentclass[a4paper]{article}
+\usepackage{graphics}
+\pagestyle{plain}
+\font\AFMCcl=cmssbx10 
+\font\AFMCab=cmssbx10
+\font\AFMCan=cmss10
+\font\AFMChb=cmssbx10 scaled 900
+\font\AFMCfg=cmss10 scaled 900
+\font\AFMCnormal=cmr9
+\font\AFMCfoot=cmr8
+\setlength{\unitlength}{1in}
+
+\begin{document}
+
+\noindent
+{\AFMChb {Deconvolution with ill-suited basis functions}}
+
+\noindent To demonstrate the importance of choosing the appropriate basis
+functions for the deconvolution process, we first analyse the data
+without using the basis functions defined in
+Eqs.~\ref{eqn:fA1}~to~\ref{eqn:fA5}. This can be achieved by directly
+applying Eqs.~\ref{eqn:beta}~and~\ref{eqn:Abel1} to determine the radial
+density distribution. The integrand in Eq.~\ref{eqn:Abel1} contains a
+derivative, $\frac{d\phi}{dy}$, which results in large errors when
+evaluated numerically. To overcome this problem, this derivative is
+determined from a fifth-order polynomial fit to the data. The polynomial
+smoothing function is equivalent to using power-law basis functions in
+Eq.~\ref{eqn:f_A_rz_sum}, while the application of Eq.~\ref{eqn:Abel1}
+is essentially determining the inverse Abel transforms of these
+power-law basis functions (or the basis functions of the inverse Abel
+transform) numerically.
+
+\noindent Power-law basis functions are not particularly well-suited for
+describing phase distributions caused by shock waves, because such
+distributions contain discontinuities in their first derivatives, while
+the power-law basis functions are infinitely differentiable. As a
+result, it is expected that such an approach will result in a failure to
+accurately represent the discontinuities in density, leading to
+`{\em smeared}' shock fronts.
+
+\noindent The result from analysing the flow using power-law basis
+functions is shown in
+Figure~\ref{fig:density_map_no_basis}.
+\begin{figure}[!h]
+\vspace{15mm}
+\begin{center}
+{\sc %\epsfxsize=0.7\columnwidth 
+     %\epsfbox{spheretop_density_image.eps}
+\resizebox{.5\textwidth}{!}{\includegraphics{spheretop_density_image.eps}}
+}
+\end{center}
+\vspace{15mm}
+\caption{Density map obtained using power-law basis functions for the hypersonic flow over spherically-blunted cylinder.}
+\label{fig:density_map_no_basis}
+\end{figure}
+%\noindent {\bf Figure 5:} Density map obtained using power-law basis functions for the hypersonic flow over spherically-blunted cylinder.
+Density profiles along different cuts through the density image are shown in
+Figure~\ref{fig:spheretop_dens_p2}.
+\begin{figure}[!h]
+\vspace{15mm}
+\begin{center}
+{\sc %\epsfxsize=\columnwidth 
+     %\epsfbox{spheretop_density_p2.eps}
+\resizebox{.5\textwidth}{!}{\includegraphics{spheretop_density_p2.eps}}
+}
+\end{center}
+\vspace{15mm}
+\caption{Profiles of density obtained using power-law basis functions for the steady flow over the spherically-blunted cylinder.}
+\label{fig:spheretop_dens_p2}
+\end{figure}
+%\noindent {\bf Figure 6:} Profiles of density obtained using power-law basis functions for the steady flow over the spherically-blunted cylinder.
+In these profiles, one can observe the
+density jumps across the shock waves as well as the density changes
+associated with the expansion waves. However, as expected, the Abel
+deconvolution has not been entirely successful in producing the steep
+density jump across the shock wave. The density increase should be a
+step function across the shock, however, in the results shown in
+Figure~\ref{fig:spheretop_dens_p2}, the deconvolution has `smeared' the
+shock wave. Nonetheless, the deconvoluted results show the qualitative
+features of the flow quite well: the density rises across the shock and
+the density decreases continuously in regions where the flow is expected
+to expand. 
+
+\end{document}

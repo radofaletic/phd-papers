@@ -1,0 +1,744 @@
+%%
+%% paper.tex
+%%
+\documentclass[twocolumn,fleqn,runningheads]{svjour2}
+%\smartqed  % flush right qed marks, e.g. at end of proof
+\usepackage[pdftex]{graphicx}
+\usepackage{mathptmx}
+\usepackage{subfigure}
+\usepackage{float}
+\usepackage[psamsfonts]{amssymb}
+\usepackage{amsmath}
+\usepackage{hyperref}
+
+% USER COMMANDS
+\newcommand{\ie}{ie.\ }
+\newcommand{\dee}{\operatorname{d}}
+
+\journalname{Shock Waves}
+\pdfinfo
+    {
+      /Title (Tomographic reconstruction of shock layer flows)
+      /Creator (pdfLaTeX)
+      /Author (Rado Faletic, Frank Houwing, Russell Boyce)
+      /CreationDate (\today)
+      /ModDate (\today)
+      /Subject (Shock Waves Journal paper)
+      /Keywords (tomography, shock waves, supersonic)
+    }
+
+\begin{document}
+\DeclareGraphicsExtensions{.pdf}
+\title{Tomographic reconstruction of shock layer flows}
+\author{R. Faleti\v{c} \and A. F. P. Houwing \and R. R. Boyce}
+\institute{R. Faleti\v{c} \at
+  Department of Physics\\
+  The Australian National University\\
+  \emph{Present address:} of R. Faleti\v{c}\\
+  Forum for European-Australian Science and Technology Cooperation\\
+  The Australian National University\\
+  Canberra  ACT  0200  Australia\\
+  Tel.: +61 2 6125 7885\\
+  Fax: +61 2 6125 7815\\
+  \email{Rado.Faletic@anu.edu.au}
+  \and
+  A. F. P. Houwing \at
+  Department of Physics\\
+  The Australian National University\\
+  Canberra  ACT  0200  Australia\\
+  Tel.: +61 2 6125 2807\\
+  Fax: +61 2 6125 0741\\
+  \email{Frank.Houwing@anu.edu.au}
+  \and
+  R. R. Boyce \at
+  The School of Aerospace, Civil and Mechanical Engineering\\
+  University of New South Wales\\
+  Australian Defence Force Academy\\
+  Canberra  ACT  2600  Australia\\
+  Tel.: +61 2 6268 8279\\
+  Fax: +61 2 6268 8337\\
+  \email{r.boyce@adfa.edu.au}
+}
+\date{Received: date / Accepted: date}
+
+\maketitle
+
+\begin{abstract}
+
+  The tomographic reconstruction of supersonic\linebreak flows faces two challenges. Firstly, techniques used in the past, such as the Direct Fourier Method (DFM)~\cite{gottlieb:gustafsson,morton_thesis} or various backprojection~\cite{kak:slaney} techniques, have only been able to reconstruct areas of the flow which are upstream of any opaque objects, such as a model. Secondly, shock waves create sharp discontinuities in flow properties, which can be difficult to reconstruct both in position and in magnitude with limited data.
+
+  This paper will present a reconstruction method, \emph{matrix inversion using ray-tracing and least squares conjugate gradient} (MI-RLS), which uses geometric ray-tracing and a sparse matrix iterative solver~\cite{LSQR_paper} to overcome both of these challenges. It will be shown, through testing with a phantom object described in tomographic literature, that the results compare favourably to those produced by the DFM technique. Finally, the method will be used to reconstruct three dimensional density fields from interferometric shock layer images, with good resolution~\cite{faletic_phd}.
+
+  \keywords{tomography, shock waves, supersonic}
+\end{abstract}
+
+%%
+%% Introduction
+%%
+
+\section{Introduction}
+Measuring three dimensional flow properties of a supersonic flow in a shock tunnel requires the use of non-intrusive optical techniques. The use of different techniques enables the measurement of a range of flow properties. When three dimensional measurements are desired one can perform a series of two dimensional measurements, such as PLIF (planar laser induced fluorescence), which represent two dimensional slices through the flow, or tomographic techniques can be implemented in order to reconstruct the flow density from line of sight measurements such as Schlieren and interferometry~\cite{merzkirch}.
+
+Through the use of interferometry, it is possible to determine the refractive index integrated along the line of sight through the flow, which in turn is related to density. In a shock tunnel facility, however, there are a number of experimental restrictions which can impede the collection of useful data. These include:
+\begin{enumerate}
+ \item visual access to the flow;
+ \item obstructions in the field of view;
+ \item short test times, on the order of milliseconds;
+ \item impurity emissions~\cite{palma:houwing:sandeman}; and
+ \item repeatability of the flow, particularly in the case of turbulent flows.
+\end{enumerate}
+Tomographic techniques used in the past have been limited in their ability to reconstruct some flow features, due to the first three of these experimental restrictions. In particular, analytical techniques such as the Direct Fourier Method\linebreak (DFM) and backprojection, which provide fast and highly accurate reconstructions, are only capable of using image data which do not contain shadows from flow obstructions such as test models. Other techniques, which are capable of accounting for opaque objects, have only been utilised in areas of science, such as image analysis, which are purely two dimensional in nature.
+
+The latter two of the experimental restrictions listed\linebreak above are properties of the experimental situation that cannot be accounted for in tomographic calculations, and must be addressed prior to performing tomographic reconstructions.
+
+One of the important features of supersonic flows over test objects is that shock waves are often generated. These sharp discontinuities in flow properties can be difficult to reconstruct with limited projection data. Different reconstruction methods resolve these features with varying degrees of accuracy with regards to position and amplitude. Preempting the nature of these shock structures can facilitate reconstruction~\cite{houwing:takayama:koremoto:hashimoto:faletic:gaston}.
+
+Few techniques have been successfully employed for\linebreak performing tomography in shock layer and related flows. Some notable works are Honma {\it et al.}~\cite{honma:ishihara:yoshimura:maeno:morioka}, Houwing\linebreak {\it et al.}~\cite{houwing:takayama:koremoto:hashimoto:faletic:gaston}, and Morton~\cite{morton_thesis}.
+
+The purpose of this paper is to report on the development of a reconstruction technique that is capable of resolving flow structure in regions of limited data, such as around a test model where visual access to the flow is obstructed by the model, and the resolution of shock features. This paper extends the work of Morton~\cite{morton_thesis}.
+
+Section~\ref{section_theory} will briefly outline the necessary theory for performing tomographic reconstructions from phase data\linebreak from interferometric measurements. Section~\ref{section_method} details an implementation of a method, MI-RLS, capable of achieving the above objectives.
+
+Section~\ref{section_phantoms3d} uses a standard phantom object from tomographic literature to test the MI-RLS in three dimensions with limited resolution and projection data. It will be shown that the MI-RLS offers comparable results, both visually and quantitatively, to the DFM.
+
+Finally, Section~\ref{section_experimental} uses the MI-RLS to reconstruct the three dimensional density field for two supersonic shock\linebreak layer flows, and these are compared with results from the DFM. The reconstructions will demonstrate the usefulness of the MI-RLS, as well as expose some of its weaknesses.
+
+
+%%
+%% Sections
+%%
+\section{Tomography}\label{section_theory}
+
+In most cases of performing interferometry of shock layer flows, lasers are used as the source of the light rays, which change phase as they pass through the test section according to the refractive index changes within the flow. Appropriate application of tomographic methods allows for the reconstruction of the refractive index, which has a linear relationship with the density of the flow and thus allows for reconstruction of the density field.
+
+\subsection{Interferometry}\label{interferometry_sect}
+A flow interferogram is a fringe pattern produced by the change in phase experienced by light when it passes through the flow. The light beam is initially split, with a beam splitter, into two beams. One beam passes through the test section of the flow, and the other beam is diverted around the flow. Finally, the two beams are recombined, producing a fringe pattern corresponding to their phase difference, and this difference is captured on either a film or digital recording medium. The basic configuration for performing interferometry in a shock tunnel is shown in Figure~\ref{interferometer}. Note that this figure depicts a Mach-Zehnder interferometer, though there are other types of interferometers suitable for application in a shock tunnel.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.475\textwidth]{01.pdf}
+  \caption{Basic Mach-Zehnder interferometer.}\label{interferometer}
+\end{figure}
+
+From the fringe patterns, interferometric data is obtained by reducing the finite fringe patterns to phase maps via the two dimensional Fourier transform method described by\linebreak Babinsky \& Takayama~\cite{babinsky:takayama}, Bone~\cite{bone} and Bone {\it et al.}~\cite{bone:bachor:sandeman}. This method involves the following steps:
+\begin{enumerate}
+ \item Perform a two dimensional Fourier transform of the interferogram;
+ \item Perform a frequency shift in the Fourier transform plane, so that the data is located around zero frequency;
+ \item Apply a filter operation, to remove both low frequency and high frequency noise from the data;
+ \item Perform a two-dimensional inverse Fourier transform to produce the filtered inverse transform;
+ \item Determine the phase by evaluating the arctangent of the ratio of the imaginary and real parts of the inverse transform;
+ \item ``Unwrap'' the phase by adding multiples of $2\pi$ where appropriate, as described by Bone~\cite{bone}; and
+ \item Remove any residual background phase.
+\end{enumerate}
+After performing these steps we have a measurement of the phase change according to the \emph{interferometer equation}~\cite{merzkirch}:
+\begin{equation}
+  \frac{\Delta\phi}{2\pi} = \int_{\Gamma} \frac{1}{\lambda} \left( \eta \left( \mathbf{x} \right) - \eta_\text{ref} \right) \, \dee \mathbf{x}
+\end{equation}
+where $\mathbf{x}$ is a position vector in $\mathbb{R}^3$, $\Delta\phi$ is the phase change, $\Gamma$ is the ray path, $\lambda$ is the wavelength of the light source, $\eta \left( \mathbf{x} \right)$ is the refractive index of the flow and $\eta_\text{ref}$ is the refractive index in the reference beam of the interferometer.
+
+When the distances involved, and variations in refractive index, are sufficiently small the ray path $\Gamma$ can be approximated to be a straight line. These conditions hold for interferometricexperiments in shock tunnels.
+
+Performing two experiments, one with the flow conditions of interest and one of the same experimental setup but with a vacuum, allows us to compute a ``phase difference'', \ie
+\begin{equation}\label{interferometer_equation}
+  \left( \frac{\Delta\phi}{2\pi} \right)_\text{flow} - \left( \frac{\Delta\phi}{2\pi} \right)_\text{vac} = \int_{\Gamma} \frac{1}{\lambda} \left( \eta_\text{flow} \left( \mathbf{x} \right) - \eta_\text{vac} \left( \mathbf{x} \right) \right) \, \dee \mathbf{x}
+\end{equation}
+Calculating this phase difference essentially eliminates major phase differences caused by non-flatness of the test section windows. Other spurious phase differences are filtered out by the fringe analysis technique described above.
+
+Liepmann \& Roshko~\cite[pg~154]{liepmann:roshko} state that, except for flows of high density, refractive index and density are linearly related according to the Gladstone-Dale formula:
+\begin{equation}\label{GladstoneDale}
+  \eta = 1 + \kappa \rho
+\end{equation}
+where $\rho$ is the density and $\kappa$ is the \label{symbol_GladstoneDale}Gladstone-Dale coefficient and is related to the flow conditions. Tables for $\kappa$ are readily found in the literature. It should be noted that in flows of high enthalpy, the composition of the flow may be non-uniform, meaning that $\kappa$ is not constant throughout the flow. For some test gases, however, it may be possible to assume constant $\kappa$. For example, the Gladstone-Dale constant for air is insensitive to changes in flow composition, at least for temperatures temperatures lower than $5000$~K, since the Gladstone-Dale constants for dissociated oxygen and nitrogen do little to change the overall $\kappa$~\cite[pg~68]{merzkirch}.
+
+By inserting equation~\ref{GladstoneDale} into equation~\ref{interferometer_equation}, and recognising that the density in a vacuum is zero, we get
+\begin{equation}
+  \left( \frac{\Delta\phi}{2\pi} \right)_\text{flow} - \left( \frac{\Delta\phi}{2\pi} \right)_\text{vac} = \int_{\Gamma} \frac{\kappa}{\lambda} \rho \left( \mathbf{x} \right) \, \dee \mathbf{x}
+\end{equation}
+Here, $\rho$ without any subscripts is the density of the experimental flow.
+
+Determining $\frac{\kappa}{\lambda} \rho$ from the measurements $\left( \Delta\phi / 2\pi \right)_\text{flow} - \left( \Delta\phi / 2\pi \right)_\text{vac}$ is the inverse problem known as tomography. For ease of notation, the value $\left( \Delta\phi / 2\pi \right)_\text{flow} - \left( \Delta\phi / 2\pi \right)_\text{vac}$ shall be depicted as $p_\Gamma$, indicating that this measurement is the result of integration along the path $\Gamma$.
+
+
+% % % % % % %
+%  Fourier  %
+% % % % % % %
+\subsection{Direct Fourier Method}\label{section_Fourier}
+\begin{figure}
+  \centering
+  \subfigure[\label{Fourier_st_a}]{\includegraphics[width=0.16\textwidth]{02a.pdf}}
+  \subfigure[\label{Fourier_st_b}]{\includegraphics[width=0.16\textwidth]{02b.pdf}}
+  \subfigure[\label{Fourier_st_c}]{\includegraphics[width=0.16\textwidth]{02c.pdf}}
+  \caption{The Fourier slice theorem, in $\mathbb{R}^2$.}\label{Fourier_st}
+\end{figure}
+One way of recovering $\frac{\kappa}{\lambda} \rho$ from the measurements $p_\Gamma$ is via application of the Fourier slice theorem~\cite{kak:slaney}. This is a two-dimensional technique, meaning that the ray path/line, $\Gamma$, can be completely described by $r$ and $\theta$, where $r$ is the shortest distance of the line from the origin, and $\theta$ is the angle made by a perpendicular to the line with the positive $x$-axis. This allows $p_\Gamma$ to also be described as $p_\theta \left( r \right)$ in the two-dimensional case. With this rewriting, the Fourier slice theorem is simply the following relationship:
+\begin{equation}\label{FST}
+  \left( \mathcal{F}_1 p_{\theta} \right) \left( r \right) = \left. \left( \mathcal{F}_2 \frac{\kappa}{\lambda}\rho \right) \left( x, y \right) \right|_{\left( x,y \right) = \left( r\cos\theta , r\sin\theta \right)}
+\end{equation}
+where $\mathcal{F}_1$ and $\mathcal{F}_2$ are the one- and two-dimensional Fourier transforms, and there is an implied conversion between rectangular $\left( x,y \right)$ and polar $\left( r, \theta \right)$ coordinate systems in Fourier space. This can be described geometrically as follows: \emph{the one dimensional Fourier transform of the phase integral at angle $\theta$ is the same as a slice at angle $\theta$ in the plane of the two dimensional Fourier transform of $\frac{\kappa}{\lambda} \rho$}. Figure~\ref{Fourier_st} gives a diagramatic representation of this process: Figure~\ref{Fourier_st_a} depicts the integration (projection) of the phase along the line of sight normal to the angle $\theta$; Figure~\ref{Fourier_st_b} shows this projection $p_\theta$, and its one dimensional Fourier transform with Real and Imaginary parts, and; Figure~\ref{Fourier_st_c} is a map of the two dimensional Fourier transform of the phase, with a slice along the ray at angle $\theta$ giving $\mathcal{F}_1 p_\theta$. 
+
+Application of this method, as described above, is known as the \label{symbol_DFM}\emph{Direct Fourier Method} (DFM), and involves the following steps:
+\begin{enumerate}
+ \item One dimensional Fourier transforms are performed on the data for each value of $\theta$.
+ \item For each of the transforms performed in the previous step, the result is placed onto a two dimensional domain. This is simply a recognition that it was necessary to consider $p_\theta \left( r \right)$ to be a function of a single variable $r$ for the purpose of performing a one dimensional Fourier transform. However, $p_\theta \left( r \right) = p \left( r, \theta \right)$ is in fact a function of two variables.
+ \item An interpolation is performed in the two dimensional Fourier plane.
+ \item An inverse two dimensional Fourier transform is applied to reveal the subject.
+ \item The absolute values of the resulting complex number are kept as the reconstruction.
+\end{enumerate}
+
+The major drawback of the DFM is that the conversion between rectangular and polar coordinates, in Fourier space, can introduce numerical artifacts. This becomes less of a problem with larger numbers of low-noise projections, as interpolating between the two coordinate systems becomes more accurate with more sample points. In particular, the higher frequencies in any interpolation are more poorly resolved than the lower frequencies, due to the radial spreading of the slices in the two dimensional Fourier plane. In addition, frequencies outside of the maximum radius, $r$, have no sample points with which to generate interpolated values.
+
+Another issue with the DFM is that it requires each projection to be defined at all values of the measurement domain. If there were ``holes'' in the data set then the Fourier transform would be incapable of distinguishing these holes from actual data (by ``hole'' it is meant that no data exists for a particular region), and hence treat them as such, producing incorrect results in the Fourier transform stage. This requirement may be impossible to satisfy in experimental situations where an opaque object, such as a test object, may cast a shadow on the interferograms leaving portions undefined.
+
+
+% % % % % %
+% Matrix  %
+% % % % % %
+\subsection{Matrix inversion}\label{section_matrix}
+In many physical situations, a number of numerical methods are available with which to perform calculations. These computational methods involve discretising the problem.
+
+Discretising the problem before any theorems are applied allows us to reformulate the problem of tomographic inversion into one of inverting a matrix equation. Balandin \& Ono~\cite{balandin:ono} explain how doing so can be preferable for physicists, since it is often difficult to obtain more than a few angles of projection in many different types of studies.
+
+What follows is a summary of this technique.
+
+\subsubsection{Parametrisation}\label{parametrisation}
+Firstly, the measurement data, or ray projections, are collected as discrete data $p_i$, resulting from integrating $\frac{\kappa}{\lambda} \rho$\linebreak along the ray paths $\Gamma_i$. Let us suppose that we can discretise our function, $\frac{\kappa}{\lambda} \rho$. A logical way of doing this is to approximate $\frac{\kappa}{\lambda} \rho$ as a weighted sum of known basis functions, $e_j$, \ie $\frac{\kappa}{\lambda} \rho \approx \sum_j c_j e_j$, where the $c_j$ are weighting values. The choice of $e_j$ will depend on the nature of the problem. Houwing {\it et al.}~\cite{houwing:takayama:koremoto:hashimoto:faletic:gaston} showed how using different basis functions in an axisymmetric flow reconstruction produces vastly different results, and by pre-empting the nature of the flow and choosing basis functions accordingly, one can produce better results with much less computational effort.
+
+The above discretisations give us:
+\begin{equation}
+  p_i = \sum_j c_j \int_{\Gamma_i} e_j \left( \mathbf{x} \right) \, \dee \mathbf{x}
+\end{equation}
+changing the problem from one of determining the function  $\frac{\kappa}{\lambda} \rho$, to determining the values of the weights $c_j$..
+
+By considering a collection of measurements along different ray paths we can form a vector of projections $\mathbf{p} = \left( p_1 , p_2, \ldots , p_i , \ldots,p_N \right)$. Likewise, we can form a vector of weights $\mathbf{c} = \left( c_1, c_2, \ldots, c_j, \ldots, c_M \right)$. This allows us to rewrite the problem as a matrix equation:
+\begin{equation}\label{matrix_equation}
+  \mathbf{p} = A \mathbf{c}
+\end{equation}
+where $A$ is the $N \times M$ matrix of integrals defined by:
+\begin{equation}\label{matrix_integral}
+  A_{ij} = \int_{\Gamma_i} e_j \left( \mathbf{x} \right) \, \dee \mathbf{x}
+\end{equation}
+There are many well known mathematical techniques available to invert equation~\ref{matrix_equation} and solve for $\mathbf{c}$, hence determining $\frac{\kappa}{\lambda} \rho$.
+
+The success of this technique relies on a number of factors. Clearly the experimental conditions, \ie quality and\linebreak abundance of the data $p_i$, will play a role. Mathematically the other important factors are the choice of basis functions $e_j$, knowledge about the ray paths $\Gamma_i$, and suitability of the particular matrix inversion algorithm to solve equation~\ref{matrix_equation}.
+
+Historically, this matrix method has not had widespread use in flow imaging due to the relatively large demands it places on computing resources, particularly memory. It is sometimes necessary to use a large number of basis functions to get meaningful results, which may exceed the memory limitations of the average desktop computer. This means that in the past this type of computation has been restricted to high performance workstations and supercomputers. Recently, however, the decreasing price of high speed computer memory for desktop machines has enabled this type of computation to be implemented cheaply as a viable solution for particular experimental regimes. With regards to computing time, the large number of calculations involved for the integrations and for the matrix inversion puts further restrictions on performing this type of calculation. In the past, even high performance workstations would have been impractically slow.
+
+\subsection{Block parametrisation}
+One of the most practical parametrisations involves subdividing the region of interest into cells. In the current application one might simply use a pre-designed grid to define the cells, for example the grid used in a computational fluid dynamics (CFD) study of the same situation. The size, $M$, of the coefficient vector, $\mathbf{c}$, is the number of cells in this parametrisation. These cells can be structured, such as a rectangular grid, or unstructured, such as a tetrahedral grid~\cite{sambridge:gudmundsson}. In either case there are many ways in which we could define a basis, and perhaps one of the most useful is:
+\begin{equation}
+e_j \left( \mathbf{x} \right) =
+\begin{cases}
+ V_j^{-\frac{1}{2}} & \mathbf{x}\in \text{cell } j \\
+      0       & \mathbf{x}\notin \text{cell } j
+\end{cases}
+\end{equation}
+where $V$ is volume of the $j$-th cell. Using $V_j^{-{1/2}}$, as opposed to unity, essentially normalises this set of basis functions.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.1\textwidth]{03.pdf}
+  \caption{$A_{ij}$ is related to the length of the intersection between the $i$-th ray with cell $j$.}\label{ray_length}
+\end{figure}
+This basis means that the integral in equation~\ref{matrix_integral} reduces to the product of $V_j^{-{1/2}}$ with the length of the ray through the $j$-th cell, making computations trivial. See Figure~\ref{ray_length} for an example of a ray passing through an isolated cell.
+
+With this type of basis, visualisation is simple since the grid can be directly displayed using existing software.
+
+\subsection{Ray-tracing}\label{rt1}
+
+Since this paper only considers situations where the light rays $\Gamma_i$ can be considered straight lines, we can assume that each pixel on a digital recording medium can be taken to have measured the integration of $\frac{\kappa}{\lambda} \rho$ along a single thin ray path (see Figure~\ref{rays}).
+\begin{figure}
+  \centering
+  \includegraphics[width=0.33\textwidth]{04.pdf}
+  \caption{Ray-tracing with a single thin ray.}\label{rays}
+\end{figure}
+
+This simple ray-tracing integration allows us to discard measurements $p_i$ which correspond to shadows on the interferogram. Also, note that in the matrix equation~\ref{matrix_equation} there is no restriction on the geometry of the problem (unlike the DFM method which requires the projections to be arranged axi-symmetrically as two dimensional slices). This allows for the use of data from different viewing angles regardless of any obstructions, greatly increasing the scope of useable data.
+
+
+% % % % % % % % % %
+%  section method %
+% % % % % % % % % %
+\section{Methods}\label{section_method}
+In order to perform tomography as described in \S\ref{section_Fourier} and \S\ref{section_matrix}, using the DFM and block parametrisation methods, software needed to be written. This section briefly describes the computational methods. For more detailed descriptions and analysis of the algorithms see Faleti\v{c}~\cite{faletic_phd}, which is freely available online at \href{http://adt.caul.edu.au/}{{h}ttp://adt.caul.edu.au/}.
+
+
+\subsection{DFM}
+The Fourier Transform steps in the DFM were performed using the FFTW~\cite{fftw} implementation of the Fast Fourier Transform (FFT).
+
+The interpolation procedure was implemented using \emph{natural neighbour} interpolation~\cite{sambridge:braun:mcqueen,watson}. A high order method from the field of computational geometry, it is ideally suited for interpolation from non-rectangular meshes. In particular, the current work uses the natural neighbour implementation of Watson~\cite{watson} which, although consuming considerably more computing time than a simple bilinear interpolation, produces markedly better results.
+
+\subsection{MI-RLS}\label{section_MIRLS}
+For simplicity the matrix method using the block parametrisation shall be referred to as the \emph{MI-RLS}\label{symbol_MIRLS} technique, or the \emph{matrix inversion using ray-tracing and least squares conjugate gradient}.
+
+\subsubsection{Ray-tracing/integration}\label{rt2}
+The calculation of the matrix elements $A_{ij}$ were performed using the geometric properties of straight lines and three dimensional shapes. Each integration path $\Gamma_i$ can be completely described geometrically by a reference point and a direction. Similarly, each grid cell, or basis function $e_j$, can be completely described by its vertices. These descriptions allow for performing accurate geometric calculations as to the intersection of each ray $\Gamma_i$ with each grid cell $e_j$, leading to accurate calculations of the value $A_{ij}$. This method is markedly different to other implementations (in the fields of seismology and astrophysics), which generally ``step'' along each ray path at fixed intervals much like standard numerical integration. The implementation of a geometric approach allows for arbitrary precision and arbitrary scale of the situation (although, computer limits will still apply).
+
+In order to speed up calculations, a process called the ``walking'' cell method was implemented~\cite[pp~855--857]{sambridge:braun:mcqueen}. This involves the following steps for a given $\Gamma_i$:
+\begin{enumerate}
+ \item Find a cell on the surface of the grid structure which is intersected by $\Gamma_i$, begin performing calculations with this cell.
+ \item Inspect all neighbouring cells to determine which are intersected by $\Gamma_i$, and continue performing calculations with them\label{search_step}.
+ \item If neighbouring cells are intersected, repeat step~\ref{search_step} on these cells.
+ \item Integration finished.
+\end{enumerate}
+
+\subsubsection{Matrix particulars}\label{M_particulars}
+Once the matrix elements $A_{ij}$ of equation~\ref{matrix_equation} are calculated, as per the ray-tracing method above, we need to solve for $\mathbf{c}$ through one of the many methods available. After studying the situation, and the types of matrices that result from the ray projections, the following can be said about the matrix $A$:\footnote{As from \S\ref{parametrisation}, $A$ is an $N \times M$ matrix, where $N$ is the number of ray projections and $M$ is the number of cells.}
+\begin{itemize}
+ \item It is sparse, \ie it consists mostly of zeros. Additionally, the larger our grid resolutions become, the more sparse $A$ becomes.
+ \item It is non-negative, \ie $A_{ij} \ge 0 \; \forall i,j$, since we are dealing with physical quantities.
+ \item It is non-symmetric, \ie $A \ne A^T$.
+ \item It is rectangular, due to the general case being such that $M\ne N$.
+ \item It is incompatible, \ie no exact solution exists for $\mathbf{c}$ due to experimental and numerical errors.
+\end{itemize}
+Also, it is impossible to determine whether the rows of $A$ might be re-ordered to produce a matrix better suited for numeric computations. In fact, other than those listed above, $A$ has no properties which may enable the direct use of optimised inversion methods~\cite[pg~131]{toft}.
+
+The most well known methods for solving a linear system with this mix of characteristics are iterative techniques based on the least squares conjugate gradient method~\cite{dongarra}. The particular technique used in this research was the LSQR algorithm~\cite{LSQR_algorithm}. This has been shown to be superior to the more standard methods, such as the Algebraic Reconstruction Technique (ART), Simultaneous Iterative Reconstruction Technique (SIRT), and the Simultaneous Algebraic Reconstruction Technique (SART), for the purpose of tomographic reconstructions~\cite[pg~19]{nolet}. It also has the capacity for any {\it a priori} data to be easily included in the system, and has the potential for the results of a CFD solution or DFM reconstruction to be used as a starting point for the iterations.
+
+The LSQR algorithm aims to minimise the value $\beta_k = \left\| A\mathbf{c}_k - \mathbf{p} \right\|$\label{symbol_iterate}, the residual. This is done through a strict process, which continues for a given number of iterations, or until the residual has appropriately converged.
+
+When dealing with real world matrix systems a regularisation can be applied which restricts the way in which the solution converges. A simple regularisation is to ensure that the solution is positive, \ie at the end of each iteration check every element of $\mathbf{c}$ so that if $c_i < 0$ set $c_i = 0$~\cite{calvetti:landi:reichel:sgallari}. All of the solutions derived in this study have employed this regularisation, since we desire solutions which are non-negative.
+
+Throughout this study, another regularisation method has also been used where appropriate, called the \emph{smoothing} operator~\cite{nolet,toft}, which can be described as follows:
+\begin{equation}
+  \text{N}_i c_i - \sum_{k=1}^{\text{N}_i} {c_i}_{\text{n}_k} = 0
+\end{equation}
+where \label{symbol_Ni}$\text{N}_i$ is the number of surrounding neighbours of the $i$-th cell and \label{symbol_cink}${c_i}_{\text{n}_k}$ is the value of the $k$-th neighbour of the $i$-th cell. This smoothing operator ensures that the values of adjacent cells do not vary too greatly. There are, however, a number of consequences to the employment of this regularisation. Sharp discontinuities will be blurred, and structual features may experience an increase in size due to this blurring. Furthermore, the overall values may experience a reduction in intensity, as this regularisation also tends to push the solution towards zero.
+
+In the study of shock layer flows, a smoothing regularisation seems in conflict with the desire for strong resolution of sharp shock layer features. Whilst this is true, it will be shown in Section~\ref{section_phantoms3d} that such a regularisation proves useful in reconstructions where the original projections contains significant amounts of random noise.
+
+Where the smoothing regularisation is applied a\linebreak subscript ``$\text{s}$'' will be used, \ie \label{symbol_MIRLSs}MI-RLS$_\text{s}$.
+
+\subsection{Error analysis}\label{2d_analysis}
+In order to quantify the effectiveness of a given reconstruction technique, appropriate measurements need to be taken. Two different measurements are used, one to place a value on the effectiveness of the overall reconstruction, and the other examines more specific regions.
+
+The first of these measurements utilises a difference\linebreak map, $\mathbf{x}_\text{d}$, whose values are calculated as follows
+\begin{equation}
+  {x_\text{d}}_i = \left| x_i - {x_\text{ref}}_i \right|
+\end{equation}
+where $\mathbf{x}_\text{ref}$ is the reference, or original, data and $\mathbf{x}$ is the reconstruction being examined. A ``measure'' of the overall difference of the reconstruction can then be calculated as:
+\begin{equation}
+  L_2 = \frac{\sqrt{\sum_i {x_\text{d}}_i^2}}{\sqrt{\sum_i x_i^2}}
+\end{equation}
+which, if multiplied by a factor of $100$, can be considered a percentage error~\cite{toft}.
+
+The second quantitative error measurement graphs the difference between the DFM and MI-RLS by taking diagonal cuts through any portion of a reconstruction, and the values plotted against the same cut in the original model.
+
+
+% % % % % % % %
+%  section 3d %
+% % % % % % % %
+\section{Test phantom}\label{section_phantoms3d}
+In order to determine the effectiveness of the MI-RLS technique before applying it to real experimental data, a reconstruction was performed on a \emph{phantom} object.\footnote{A \emph{phantom} is a well-defined test object.} Artificial projections were created, and reconstructions were made using the DFM and MI-RLS and the results were analysed.
+
+The resolution of the test phantom is somewhat small, due to computer memory restrictions. Similarly, the number of projection angles is also limited, as would be the case in gathering data from shock tunnel measurements.
+
+Although the DFM method is easily capable of working with much higher resolutions, it was felt that a direct comparison of the results from both reconstruction methods should be made on equal terms. Unfortunately, these types of resolutions do put the DFM at a disadvantage, due to the sampling requirements derived in Kak \& Slaney~\cite[pg~186]{kak:slaney}.
+
+
+% % % % % % % % %
+%  Shepp-Logan  %
+% % % % % % % % %
+\subsection{\emph{Shepp-Logan}}\label{SL}
+\begin{figure}
+  \centering
+  \includegraphics[width=0.333\textwidth]{05.pdf}
+  \caption{2D \emph{Shepp-Logan} phantom.}\label{SheppLogan2d}
+\end{figure}
+The work by Shepp \& Logan~\cite{shepp:logan} is one of the most famous pieces of work in tomography. In their paper a two dimensional phantom is described which is a model of a human head. What has been employed in the current section is a high contrast three dimensional version of this phantom, and it shall be referred to as \emph{Shepp-Logan}.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.475\textwidth]{06.pdf}
+  \caption{Slices of the 3D \emph{Shepp-Logan} phantom.}\label{SheppLogan3d}
+\end{figure}
+Figure~\ref{SheppLogan2d} shows the two dimensional version of this phantom at high resolution, and Figure~\ref{SheppLogan3d} shows 36 slices, parallel to the $yz$-plane, of the three dimensional phantom at a much lower resolution.\footnote{Note that the three dimensional phantom is circular in the $yz$-plane, and oval in the $xy$- and $zx$-planes.} The three dimensional \emph{Shepp-Logan} phantom is difficult to display in three dimensional perspective view, given the high density shell which obstructs view of the interior structure.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.24\textwidth]{07.pdf}
+  \caption{3D \emph{Shepp-Logan} phantom.}\label{SheppLogan3d3d}
+\end{figure}
+Figure~\ref{SheppLogan3d3d} shows an example of the perspective view of this phantom, with isosurfaces at values $1.00$ and $0.25$, and a $yz$ cut plane positioned midway along the $x$-axis.
+
+The \emph{Shepp-Logan} phantom is one of the more challenging test phantoms from the literature to reconstruct~\cite{gottlieb:gustafsson}. This is due to the high density ellipse which represents the skull and completely surrounds the rest of the structure.\linebreak When projecting through the phantom this high density region can ``shield'' some of the lower density regions within the phantom. The result is that without good quality projection data, the reconstruction of the internal structures may be poorly resolved.
+
+In Figure~\ref{SheppLogan3d}, slices 1--5 and 32--36 are empty, since they corresponded to slices of the phantom which contain no\linebreak structure.
+
+The resolution of the \emph{Shepp-Logan} phantom used here is 36$\times$36$\times$36. The total number of cells, $M$, is therefore 46,656.
+
+Twelve artificial projections were created from the phantom, starting with a 36$\times$36 array of rays perpendicular to the $xy$-plane, and each subsequent projection rotated about the $x$-axis at an interval of 15$^\circ$. These projections are shown in Figure~\ref{SheppLogan_projections}.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.475\textwidth]{08.pdf}
+  \caption{Twelve projections of the \emph{Shepp-Logan} phantom.}\label{SheppLogan_projections}
+\end{figure}
+
+
+\subsubsection{Reconstructions}\label{SL_inversions}
+In order to use the DFM to reconstruct \emph{Shepp-Logan} from its projections we must break the problem up into slices. This is done by recognising that each of the projections in Figure~\ref{SheppLogan_projections} actually consists of a series of parallel vertical projections of two dimensional slices through the phantom. So, for this series of projections, we actually compute 36 DFM reconstructions corresponding to slices parallel to the $yz$-plane. These 36 reconstructions are shown in Figure~\ref{SheppLogan_fft}.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.475\textwidth]{09.pdf}
+  \caption{DFM reconstruction of the \emph{Shepp-Logan} phantom.}\label{SheppLogan_fft}
+\end{figure}
+
+We can compare these reconstructed slices directly with the slices shown in Figure~\ref{SheppLogan3d}. It is apparent that the slices depict the original image. The resolution, generally, is slightly poorer than the original images, especially in the vicinity of the edges of the structural features. Slices through the midsection of the phantom, in particular, show poor definition of the exterior skull.
+
+It is reasonable to suggest that the disrepencies are primarily due to the sub-optimal number of projection angles and the resolution of each projection. The low number of projection angles firstly indicates that not enough data is available to adequately resolve the different structural features.\footnote{Shepp \& Logan~\cite{shepp:logan} demonstrate excellent reconstruction of their two dimensional phantom with high resolution.} Secondly, the ratio between the number of projection angles and each projection resolution indicates that aliasing is possible, and indeed can be easily identified as symmetric patterns both inside and outside of the skull.
+
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.475\textwidth]{10.pdf}
+  \caption{MI-RLS reconstruction of the \emph{Shepp-Logan} phantom.}\label{SheppLogan_inv}
+\end{figure}
+Figure~\ref{SheppLogan_inv} shows the reconstruction using the MI-RLS, having converged after 1,177 iterations. It is displayed in the same format as for the DFM reconstruction in Figure~\ref{SheppLogan_fft}, in order to make quick comparisons. The most obvious comment is that the reconstruction is quite similar to the DFM reconstruction. The outline of the phantom is better defined than the DFM, and some of the internal structural features are also clearly visible, particularly the low density ellipsoids. However, inside the skull there seems to be a degree of random noise. Also apparent are symmetrical streaking patterns exterior to the skull, which are more characteristic of sub-optimal backprojection methods. However, in this case, they demonstrate the manner in which the ray-tracing has sampled the grid cells, and hence allowing or restricting flexibility in the iterative solution based on the sampling density of each cell.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.475\textwidth]{11.pdf}
+  \caption{MI-RLS$_\text{s}$ reconstruction of the \emph{Shepp-Logan} phantom.}\label{SheppLogan_inv_s}
+\end{figure}
+Also shown here, in Figure~\ref{SheppLogan_inv_s}, is a reconstruction using MI-RLS$_\text{s}$ with the smoothing regularisation, which converged in 288 iterations. The introduction of smoothing has clearly blurred the entire reconstruction, in effect reducing the spacial resolution of sharp features. Also, it has eliminated the noisy deviations seen in both the DFM and MI-RLS.
+
+We observe that the MI-RLS has produced similar qualitative results to the DFM, under the same resolution and conditions.
+
+
+\subsubsection{Random noise}\label{SL_noise}
+Before continuing to the analysis of these results, this section will present reconstructions of noisy projection data. That is, a random noise will be applied to the projections in Figure~\ref{SheppLogan_projections} to see what the effect is on the reconstructions using the DFM, MI-RLS, and MI-RLS$_\text{s}$. It was decided to add Gaussian white noise to each of the projections.
+
+Four values of the Gaussian variance, $\sigma^2$, were chosen: $0.1\%$, $1.0\%$, $2.5\%$ and $5.0\%$. This resulted in 12 reconstructions (4 different error regimes and 3 different reconstruction methods). Rather than reproduce all of the images for these reconstructions here, only the images for the case of $\sigma^2 = 5.0\%$ will be presented.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.475\textwidth]{12.pdf}
+  \caption{DFM reconstructions from noisy projections of the \emph{Shepp-Logan} phantom.}\label{SheppLogan_fft5}
+\end{figure}
+\begin{figure}
+  \centering
+  \includegraphics[width=0.475\textwidth]{13.pdf}
+  \caption{MI-RLS reconstruction from noisy projections of the \emph{Shepp-Logan} phantom.}\label{SheppLogan_inv5}
+\end{figure}
+\begin{figure}
+  \centering
+  \includegraphics[width=0.475\textwidth]{14.pdf}
+  \caption{MI-RLS$_\text{s}$ reconstruction from noisy projections of the \emph{Shepp-Logan} phantom.}\label{SheppLogan_inv_s5}
+\end{figure}
+Figures~\ref{SheppLogan_fft5},~\ref{SheppLogan_inv5} and~\ref{SheppLogan_inv_s5} show the DFM, MI-RLS, and MI-RLS$_\text{s}$ reconstructions respectively.
+
+The DFM reconstruction shows further degradation of the structural boundaries, as well as enhancement of the\linebreak noise patterns, compared to the noise-free DFM reconstruction. Other than that, little can be said qualitatively.
+
+It appears that the MI-RLS has fared worst of all with the introduction of noise. The outline of the skull is barely resolved, and the internal structure is mostly non-existent, having been replaced by noise. Although this noise appears mostly random in nature, one can discern several regular ``peaks'' in the reconstruction. Not entirely unexpected, these patterns can occur when using iterative methods to solve incompatible linear systems. If there is enough incompatibility in a system, a \emph{competition} can arise between neighbouring cells whose values get pushed in opposite directions in order to find a solution that best fits all of the incompatible data. Without suitable regularisations to limit this effect, it is not uncommon to see non-physical runaway values appear in the solution, \ie very large positive and negative values in neighbouring cells.
+
+This MI-RLS reconstruction converged after 315 iterations, suggesting that the solution is stable.
+
+It is interesting to note that with smoothing turned on, the MI-RLS$_\text{s}$ produces a result almost exactly the same as its noise-free counterpart. There are two differences. Firstly, the internal structure is not as homogeneous as the noisefree reconstruction. Secondly, instead of the first and last five slices being blank, it now looks as though the reconstruction has expanded the overall shape to include structure in extra slices at the beginning, and extra slices at the end. Clearly, the introduction of noise increases the smearing effect of the smoothing regularisation.
+
+This MI-RLS$_\text{s}$ reconstruction converged in 164\linebreak iterations.
+
+
+\subsubsection{Analysis}\label{SheppLogan_error_section}
+The error measurement techniques described in \S\ref{2d_analysis} have been applied here. We can plot the effect of the introduction of noise, on each of the three reconstruction methods used here, by looking at the $L_2$ measure.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.475\textwidth]{15.pdf}
+  \caption{The variation of $L_2$ with the introduction of noise.}\label{SheppLogan_L2}
+\end{figure}
+Figure~\ref{SheppLogan_L2} shows that the DFM and MI-RLS$_\text{s}$ vary slightly with the introduction of noise, however the error in the MI-RLS increases dramatically. The fact that the MI-RLS$_\text{s}$ does not noticeably vary at all indicates that the technique is robust against the impact of noisy data. This is due to the smoothing regularisation which restricts the order of variation between neighbouring cells.
+
+What is striking is that the MI-RLS technique improves its $L_2$ measure upon the introduction of small amounts of noise, which seems to have acted as a regularisation in the LSQR solver.
+
+
+\subsubsection{Diagonal slices}
+\begin{figure}
+  \centering
+  \includegraphics[width=0.475\textwidth]{16.pdf}
+  \caption{Diagonal slices through reconstructions of the \emph{Shepp-Logan} phantom.}\label{SheppLogan_cut}
+\end{figure}
+A diagonal slice of each reconstruction was taken, starting at the cell $x = y = z = 1$ and finishing at $x = y = z = 36$. For reconstructions from the noise-free projections, the diagonal slices are shown in Figure~\ref{SheppLogan_cut}. The DFM is clearly the least effective at reconstructing the phantom. Both matrix reconstructions have produced relatively similar results, although the MI-RLS$_\text{s}$ has clearly smoothed the sharp features.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.475\textwidth]{17.pdf}
+  \caption{Diagonal slices through reconstructions from noisy projections.}\label{SheppLogan_5cut}
+\end{figure}
+The same slices through reconstructions of the noisy projections are shown in Figure~\ref{SheppLogan_5cut}. Much more noise appears on these cuts. In particular, the MI-RLS reconstruction has no resemblance to the original phantom. The DFM fares better, although its reconstruction also shows large deviations from the original phantom. By far the best fit is from the MI-RLS$_\text{s}$, which has changed little with the introduction of noise.
+
+
+\subsubsection{Scaling of results}
+Faleti\v{c}~\cite{faletic_phd} performed a number of other reconstructions on test phantoms with different resolutions and configurations. In particular, one of the phantoms reconstructed, defined in Stark {\it et al.}~\cite{stark:woods:paul:hingorani}, showed that by increasing the scale of the grid from 36$\times$36$\times$36 to 50$\times$50$\times$50 and also increasing the number of angles of projection from 12 to 36, the $L_2$ measure improves by approximately 10\% for the DFM technique, and by approximately 25\% for the MI-RLS.
+
+
+\subsection{Computational aspects}
+The MI-RLS has considerably more memory and calculation requirements than the DFM. The \emph{Shepp-Logan} example, having 36$\times$36$\times$36 cells, and 12$\times$36$\times$36 projections, will require around half a gigabyte of memory in order to complete the computations. The DFM, on the other hand, requires neglible memory. Memory requirements for the MI-RLS scale with the number of grid cells and number of projections.
+
+On the issue of computing time, it is well known that the Fourier Transform scales as $M\log M$. The limiting factor in the current study, however, is the natural neighbour interpolation, which scales as $M^2$. Typical computing time for a DFM reconstruction is in the order of minutes, with the \emph{Shepp-Logan} example taking less than 10 minutes. The MI-RLS reconstruction time is dominated by the time taken for the projections to traverse the grid. For a complete calculation, approximately 80\% of the computing time is dedicated to the projections. Clearly, the number of projections is also a factor, but the time taken for each projection depends on the number of cells traversed. A limited number of reconstructions performed by Faleti\v{c}~\cite{faletic_phd} suggest that the MI-RLS scales at least as $M$ when $M\approx N$.
+
+The \emph{Shepp-Logan} example required approximately 6\linebreak hours to complete a MI-RLS reconstruction on a desktop computer, which is more than an order of magnitude longer than for the DFM reconstruction.
+
+
+\subsubsection{Summary comments}
+The \emph{Shepp-Logan} phantom is not the easiest object to reconstruct, particularly with such low resolutions with few angular projections. Under such harsh restrictions in resolution it is clear that the MI-RLS generates comparable quality results to the DFM. However, if the projection data contains significant amounts of noise, the MI-RLS reconstruction quality decreases dramatically. By employing the use of the smoothing regularisation, with MI-RLS$_\text{s}$, we are able to produce results which are more accurate and visually identifiable than the results from the DFM.
+
+
+
+% % % % % % % % % % % % %
+%  section experimental %
+% % % % % % % % % % % % %
+\section{Experimental results}\label{section_experimental}
+In this section we perform reconstructions from two different experiments. The first experiment is an axi-symmetric flow over a hemisphere. This example provides us the opportuntity to examine a relatively simple flow, where we can collect \emph{coherent} data, \ie the data at different angles of projection do not conflict with each other to produce an incompatible matrix system in equation~\ref{matrix_equation}. The second experiment is a flow over a hyperboloid at an angle of attack relative to the freestream. This allows us to further extend the examination of the reconstruction techniques presented in this paper to a flow where each angle of projection provides us with unique data, and hence introduces a degree of incompatability to the matrix system via experimental noise and variations in shot-to-shot repeatability.We expect that this second experiment will yield lower quality reconstructions than for the axi-symmetric example, as already demonstrated fromreconstructions of the noisy \emph{Shepp-Logan} projections in section~\S\ref{SL_noise}.
+
+The measurements presented in this section are all from finite fringe interferograms of supersonic shock layer flows. The experimental methods are well described in Houwing {\it et al.}~\cite{houwing:takayama:koremoto:hashimoto:faletic:gaston} and Boyce {\it et al.}~\cite{boyce_paper}.
+
+Throughout this section, results from the MI-RLS will be compared with the DFM. The DFM has proven a good reconstruction technique for supersonic flows~\cite{morton:houwing:boyce:bone}, so this comparison demonstrates the effectiveness of the MI-RLS for resolving flow structures and density values.
+
+By necessity, the phase images used in this section have had to be reduced in resolution in order to lower the memory requirements of the MI-RLS to a workable level. The DFM, however, is capable of working with high resolutions without the need for large amounts of computer memory or computing time. In all results, reconstruction calculations have been performed with the highest resolutions possible with the available computing resources. Although this contradicts the desire to compare methods on equal terms, it should be recognised that both methods are not equally capable in all aspects of \emph{real world} flow reconstructions, and by utilising different resolutions we are able to demonstrate this.
+
+
+% % % % % % % %
+%  hemisphere %
+% % % % % % % %
+\subsection{\emph{Hemisphere}}\label{hemisphere_sect}
+\begin{figure}
+  \centering
+  \includegraphics[width=0.475\textwidth]{18.pdf}
+  \caption{Interferogram of supersonic flow over a hemisphere.}\label{sphere_interferogram}
+\end{figure}
+Houwing {\it et al.}~\cite{houwing:takayama:koremoto:hashimoto:faletic:gaston} performed double exposure holographic interferometry experiments on a hemisphere in a free piston shock tunnel. Figure~\ref{sphere_interferogram} shows the original interferogram, where the model is a cylinder which has had one end spherically blunted to produce a hemisphere. In order to generate a phase image, the region in the rectangle was processed, as described in \S\ref{interferometry_sect}, then mirrored vertically (since the flow is axisymmetric).
+
+\begin{table}
+  \centering
+  \begin{tabular}{|l|l|}\hline
+    test gas                   & partially dissociated air \\ \hline
+    specific total enthalpy    & 4.78$\pm$5\%~MJ/kg \\ \hline
+    Mach number                & 7.1$\pm$5\% \\ \hline
+    speed                      & 2.75$\pm$5\%~km/s \\ \hline
+    density                    & 0.02$\pm$5\%~kg/m$^3$ \\ \hline
+    static pressure            & 2.26$\pm$5\%~kPa \\ \hline
+    static temperature         & 387$\pm$5\%~K \\ \hline
+    Gladstone-Dale coefficient & 2.25$\times 10^{-4}$~m$^3$kg$^{-1}$~\cite[pg~68]{merzkirch} \\ \hline
+  \end{tabular}
+  \caption{Freestream conditions for the \emph{hemisphere} experiment.}\label{sphere_conditions}
+\end{table}
+The freestream flow conditions are given in Table~\ref{sphere_conditions}. The light source used for the interferometry was from a ruby laser with a wavelength of 694.3~nm and pulse duration of 25~ns. The assumption of a constant value for the Gladstone- Dale coefficient is valid, as discussed in \S\ref{interferometry_sect}, because of the low enthalpy of the flow and the absence of strong absorption lines near the wavelength of the light source.
+
+In order to apply the DFM and MI-RLS reconstruction techniques, a finite number of projections need to be given, whereas only one projection was recorded for this experiment since it is axisymmetric. To use these data in the DFM and MI-RLS, this one projection was duplicated sixteen\linebreak times, each corresponding to angles of projection separated by 11.25$^\circ$.
+
+Before the DFM could be performed, two alterations\linebreak needed to be made to the phase image. Firstly, its resolution needed to be reduced to one quarter of its original size, otherwise the interpolation process took unacceptably long to complete (several hours for a single slice). This resolution reduction was produced by halving the resolution twice, where each halving was simply done by taking the average of blocks of four. Secondly, recognising that the DFM cannot deal with opaque objects, all slices on the left hand side of the projection which included the shadow of the hemisphere were not included in the calculation. The phase map with these alterations applied is shown in Figure~\ref{sphere_projection_fft}. The DFM was performed on the area enclosed by the narrow rectangle.
+\begin{figure}
+  \centering
+  \subfigure[$\frac{1}{4}$ resolution\label{sphere_projection_fft}]{\includegraphics[width=0.23\textwidth]{19a.pdf}}
+  \subfigure[$\frac{1}{16}$ resolution\label{sphere_projection_inv}]{\includegraphics[width=0.225\textwidth]{19b.pdf}} \\
+  \subfigure{\includegraphics[width=0.333\textwidth]{19l.pdf}}
+  \caption{Phase images.}\label{sphere_unwrapped}
+\end{figure}
+
+The MI-RLS is fully capable of working with projectionscontaining shadows, so there was no need to remove those vertical slices with shadows from the hemisphere. However, given the memory requirements, the resolution needed to be reduced to one sixteenth of its original size, shown in Figure~\ref{sphere_projection_inv}. Another way of achieving the same result without reducing the resolution of the projection data would be to ray-trace the full number of projection data through the grid, resulting in a highly over-determined system. However, since the cross sectional density of rays would be far greater than the density of grid cells, the effect would have been that a large groups of rays would trace through mostly the same grid cells, in effect averaging the results. Since it was quicker to apply this averaging before the ray-tracing, the decision was made to reduce the resolution of the original projections.
+
+
+\subsubsection{Reconstructions}\label{ssphere_recon}
+\begin{figure}
+  \centering
+  \subfigure[DFM\label{sphere_fft}]{\includegraphics[width=0.21\textwidth]{20a.pdf}}
+  \subfigure[MI-RLS\label{sphere_inv}]{\includegraphics[width=0.27\textwidth]{20b.pdf}} \\
+  \subfigure{\includegraphics[width=0.333\textwidth]{20l.pdf}}
+  \caption{Reconstructions of flow over a hemisphere.}\label{sphere_reconstructions}
+\end{figure}
+Figure~\ref{sphere_fft} shows the high resolution DFM reconstruction, and Figure~\ref{sphere_inv} shows the lower resolution MI-RLS reconstruction. Both images are in the perspective view, although only two planes are shown. Due to time constraints on the available computing facilities, no reconstruction was made with the MI-RLS$_\text{s}$.
+
+As is apparent from the images in Figure~\ref{sphere_reconstructions}, the MI-RLS has a significant advantage over the DFM in resolving flow features around the hemisphere body.
+
+One interesting feature of the DFM reconstruction is that perpendicular to the tip of the hemisphere there seems to be a narrow strip of higher density gas.
+
+\begin{figure}
+  \centering
+  \subfigure[DFM\label{sphere_fft_slice}]{\includegraphics[width=0.24\textwidth]{21a.pdf}}
+  \subfigure[MI-RLS\label{sphere_inv_slice}]{\includegraphics[width=0.24\textwidth]{21b.pdf}} \\
+  \subfigure{\includegraphics[width=0.333\textwidth]{21l.pdf}}
+  \caption{Slices 1~mm in front of the hemisphere.}\label{sphere_slices}
+\end{figure}
+For each reconstruction, Figures~\ref{sphere_fft_slice} and~\ref{sphere_inv_slice} display a slice 1~mm in front of the hemisphere. The slice from the DFM reconstruction shows how noise in the original image has translated to circular bands in the reconstruction. In fully three dimensional cases, as was shown in \S\ref{section_phantoms3d}, random noise tends to be absorbed by the DFM. However, in this axisymmetric case, the same noise appears on each of the 16 projections, meaning that the noise does not appear random to the reconstruction technique. In addition to this is the fact that the original phase projection is vertically symmetrical, which provides further, false, reinforcement to the reconstruction that the noisy features are legitimate data measurements.
+
+The MI-RLS reconstruction, on the other hand, does not display these circular patterns as sharply. The primary reason for this is that the projection image used for the MI-RLS has been reduced in resolution, and so a lot of the noise has been absorbed through averaging.
+
+The MI-RLS solution was obtained after 1,000 iterations of the LSQR solver, and the resolution of the grid used was 37$\times$66$\times$66.
+
+
+\subsubsection{Analysis}\label{sphere_analysis}
+With no exact models to compare the reconstructions with, it is not possible to attribute an $L_2$ measure to them, nor to create difference maps. However, as stated in the beginning of this section, the main purpose of reconstruction is to compare the MI-RLS directly with the DFM.
+
+As we have seen from the images in \S\ref{ssphere_recon}, the MI-RLS is able to produce results not attainable through the DFM.
+
+Figure~\ref{sphere_cut} shows the density of a diagonal cut througheach of the images in Figure~\ref{sphere_slices}.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.475\textwidth]{22.pdf}
+  \caption{Diagonal cuts through the images in Figure~\ref{sphere_slices}.}\label{sphere_cut}
+\end{figure}
+
+The results of Houwing {\it et al.}~\cite{houwing:takayama:koremoto:hashimoto:faletic:gaston} suggest two relevant properties of the shock layer. Firstly, that there is a discontinuity between freestream and shocked gas which is dramatic, almost an order of magnitude. Secondly, behind the shock front and directly in front of the hemisphere, the density shows a relatively smooth variation.
+
+The DFM demonstrates a discontinuous jump, of the correct order, between the freestream and shock layer. However, directly in front of the hemisphere the reconstruction displays large oscillations (shown in the centre of the cut). Upon inspection of the original phase maps, one can clearly see the map is not \emph{smooth}, \ie a certain degree of noise exists. Closer examination along the centreline reveals that the noise there has been mirrored across the centreline (also in the full resolution phase map, not shown), presenting a region which appears to now be a feature of the flow as opposed to noise. However, reducing the resolution of the phase map to prepare it for the MI-RLS reconstruction has clearly eliminated this effect through averaging.
+
+The noise on the MI-RLS cut has smaller variations than those on the DFM cut, and the variation in density around the front of the hemisphere is less noticeable. However, if higher resolution data were to be used in this reconstruction, it is not apparent whether the density variations would develop more like those produced by the DFM, or if they would remain subdued.
+
+The discontinuity of the shock layer interface, for the MI-RLS, does not seem to be as well resolved as for the DFM. No doubt higher resolution data and grid structure would sharpen this discontinuity.
+
+
+% % % % % % % % %
+%  hyperboloid  %
+% % % % % % % % %
+\subsection{\emph{Hyperboloid}}\label{hyperboloid_sect}
+The model used in Boyce {\it et al.}~\cite{boyce_paper} is a \emph{hyperboloid}, a simple axisymmetric shape, which approximates the front 0.8~m of the \emph{HERMES} aerospace vehicle~\cite{boyce_thesis}. The interferometric measurements of the flow involved the model being inclined at an angle of 15$^\circ$  to the centre axis, and rotated at steps of 15$^\circ$  about the centre line of the flow.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.333\textwidth]{23.pdf}
+  \caption{\emph{Hyperboloid} model.}\label{hyperboloid}
+\end{figure}
+Figure~\ref{hyperboloid} shows a diagrammatic representation of this model in its experimental situation.
+
+Freestream flow conditions for the test gas are shown in Table~\ref{T3_flow_conditions}.
+\begin{table}
+  \centering
+  \begin{tabular}{|l|l|}\hline
+    test gas                   & Argon \\ \hline
+    specific total enthalpy    & 3.43$\pm$2\%~MJ/kg \\ \hline
+    Mach number                & 13.06$\pm$2\% \\ \hline
+    speed                      & 2.596$\pm$2\%~km/s \\ \hline
+    density                    & 2.8800$\times 10^{-2}\pm$7\%~kg/m$^3$ \\ \hline
+    static pressure            & 680.0$\pm$8\%~Pa \\ \hline
+    static temperature         & 113.6$\pm$1\%~K \\ \hline
+    Gladstone-Dale coefficient & 1.58$\times 10^{-4}$~m$^3$kg$^{-1}$ \\ \hline
+  \end{tabular}
+  \caption{Freestream conditions for the \emph{hyperboloid} experiment.}\label{T3_flow_conditions}
+\end{table}
+The light source was from a dye laser with wavelength 589.1~nm. Assuming that there is no ionisation, and that the Gladstone-Dale coefficient of Argon is not a strong function of temperature in the shock layer, we can consider this value to be constant. This is a valid assumption provided the enthalpy is low and the wavelength of the laser is sufficiently far from Argon absorption lines. These conditions are satisfied in Boyce's experiments for the Argon gas test case. Hence a constant value of the Gladstone-Dale coefficient is used here.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=0.25\textwidth]{24.pdf}
+  \caption{Interferogram of flow over \emph{hyperboloid} model, 15$^\circ$ angle of attack.}\label{hyperboloid_interferogram}
+\end{figure}
+The interferogram in Figure~\ref{hyperboloid_interferogram} was taken for the 0$^\circ$ rotation measurement, using a Mach-Zehnder interferometer.
+
+Seven separate measurements were taken from 0$^\circ$ to 90$^\circ$, at 15$^\circ$ intervals. However, since the model itself is axisymmetric, any measurements taken from angles 90$^\circ$ to 180$^\circ$ would simply be vertical reflections of those measurements from 0$^\circ$ to 90$^\circ$. So, we are able to duplicate some of the experimental measurements in order to provide a full rotation of projections.
+\begin{table}
+  \centering
+  \small
+  \begin{tabular}{|c|c|}\hline
+    projection angle & measurement \\ \hline\hline
+    0$^\circ$      & experimental measurement \\ \hline
+    15$^\circ$     & experimental measurement \\ \hline
+    30$^\circ$     & experimental measurement \\ \hline
+    45$^\circ$     & experimental measurement \\ \hline
+    60$^\circ$     & experimental measurement \\ \hline
+    75$^\circ$     & experimental measurement \\ \hline
+    90$^\circ$     & experimental measurement \\ \hline
+    105$^\circ$    & reflection of 75$^\circ$ rotation \\ \hline
+    120$^\circ$    & reflection of 60$^\circ$ rotation \\ \hline
+    135$^\circ$    & reflection of 45$^\circ$ rotation \\ \hline
+    150$^\circ$    & reflection of 30$^\circ$ rotation \\ \hline
+    165$^\circ$    & reflection of 15$^\circ$ rotation \\ \hline
+  \end{tabular}
+  \caption{Projection angles for the \emph{hyperboloid} experiment.}\label{T3_angles}
+\end{table}
+Table~\ref{T3_angles} shows this relationship.
+
+By again using the fringe analysis technique, phase maps were produced as shown in Figure~\ref{T3_projections} (this image shows the phase for the 0$^\circ$ angle of projection). The full resolution of these images was used in the DFM reconstruction, noting that we are only able to perform the DFM to the right of the \emph{hyperboloid} model as shown by the rectangular outline. In order to perform the MI-RLS reconstruction, however, the resolution needed to be reduced to one quarter of its original value, the result of which is shown in Figure~\ref{T3_projections_25}.
+\begin{figure}
+  \centering
+  \subfigure[Full resolution\label{T3_projections}]{\includegraphics[width=0.24\textwidth]{25a.pdf}}
+  \subfigure[$\frac{1}{4}$ resolution\label{T3_projections_25}]{\includegraphics[width=0.24\textwidth]{25b.pdf}} \\
+  \subfigure{\includegraphics[width=0.333\textwidth]{25l.pdf}}
+  \caption{Phase images for \emph{hyperboloid} at 0$^\circ$ rotation.}\label{T3_phase_maps}
+\end{figure}
+
+
+\subsubsection{Reconstructions}\label{T3_recons}
+The reconstructions for DFM, MI-RLS, and MI-RLS$_\text{s}$ are shown in Figure~\ref{T3_reconstructions} in three dimensional perspective format, with the same colour scale used in each image. Note that in Figure~\ref{T3_inv}, the outline of the \emph{hyperboloid} body has been omitted since it caused the visualisation programme to display some artifacts which obscured the more important features of the reconstruction~\cite{MayaVi}.
+\begin{figure}
+  \centering
+  \subfigure[DFM\label{T3_fft}]{\includegraphics[width=0.24\textwidth]{26a.pdf}} \\
+  \subfigure[MI-RLS\label{T3_inv}]{\includegraphics[width=0.24\textwidth]{26b.pdf}}
+  \subfigure[MI-RLS$_\text{s}$\label{T3_invs}]{\includegraphics[width=0.24\textwidth]{26c.pdf}} \\
+  \subfigure{\includegraphics[width=0.333\textwidth]{26l.pdf}}
+  \caption{Reconstructions of flow over \emph{hyperboloid}.}\label{T3_reconstructions}
+\end{figure}
+
+The MI-RLS reconstruction converged in 793 iterations, whilst the MI-RLS$_\text{s}$ had converged in 1,000 iterations. Both used grid dimensions of 25$\times$80$\times$80.
+
+Most dramatic of these reconstructions is the MI-RLS. It displays parallel streaks running along the direction of flow. The error analysis in \S\ref{section_phantoms3d} demonstrates similar streakingpatterns in the reconstructions of noisy projections.
+
+It is interesting to note that the original phase images in Figure~\ref{T3_phase_maps} display little random noise. They do show, however, non-uniform regions in the freestream,\footnote{These features are certainly visible on a computer monitor, but are not as obvious in print.} indicating\linebreak nonuniformity in the flow~\cite{boyce_thesis}. Some of the phase images of other angles of projection (not shown) display similar features, which demonstrates the difficulty in obtaining repeatable measurements under particular experimental conditions. The inclusion of such artifacts in the phase images are random in nature, and hence they present themselves as error features to the matrix solver.
+
+\begin{figure}
+  \centering
+  \subfigure[DFM\label{T3_fft_slice}]{\includegraphics[width=0.24\textwidth]{27a.pdf}} \\
+  \subfigure[MI-RLS\label{T3_inv_slice}]{\includegraphics[width=0.24\textwidth]{27b.pdf}}
+  \subfigure[MI-RLS$_\text{s}$\label{T3_invs_slice}]{\includegraphics[width=0.24\textwidth]{27c.pdf}} \\
+  \subfigure{\includegraphics[width=0.333\textwidth]{27l.pdf}}
+  \caption{Slices 1~mm in front of the \emph{hyperboloid} model.}\label{T3_slices}
+\end{figure}
+Examining a slice from each reconstruction which lies 1~mm in front of the \emph{hyperboloid} model, shown in Figure~\ref{T3_slices}, we again see the streaking pattern in the MI-RLS reconstruction in Figure~\ref{T3_inv_slice}.
+
+Visually, the DFM and MI-RLS$_\text{s}$ reconstruction slices in Figures~\ref{T3_fft_slice} and~\ref{T3_invs_slice} show some agreement in the resolution of broad structural detail. All three reconstructions show features towards the outer edges of the flow, where there should be non-varying freestream conditions.
+
+
+\subsubsection{Analysis}
+The observations made in \S\ref{T3_recons} reveal some weaknesses in the current MI-RLS algorithm, however adding a smoothing regularisation in MI-RLS$_\text{s}$ compensates for these errors, just as it is able to absorb experimental noise as was shown in Section~\ref{section_phantoms3d}. We can make quantitative comparisons between the reconstructions by taking a diagonal cut through each of the images in Figure~\ref{T3_slices}, from bottom-left to topright.
+\begin{figure}
+  \centering
+  \includegraphics[width=0.475\textwidth]{28.pdf}
+  \caption{Diagonal cuts through the images in Figure~\ref{T3_slices}.}\label{T3_cut}
+\end{figure}
+A graph of the amplitude along each cut is shown in Figure~\ref{T3_cut}.
+
+The plot representing the cut through the DFM slice does not exhibit the erroneous oscillations at the middle that were present in Figure~\ref{sphere_slices} for the \emph{hemisphere}.
+
+Wild oscillations are evident in the MI-RLS cut. The peaks of these oscillations, through the shock layer, reach values approximately equal to those of the DFM. As discussed above, variations in repeatability of the flow present themselves as error to the MI-RLS reconstruction, which creates an incompatible matrix system that can exhibit competition between the values of adjacent cells. Hence, these oscillations are artifacts of the MI-RLS technique in the\linebreak presence of noisy data.
+
+With the introduction of smoothing, the MI-RLS$_\text{s}$ seems to have eliminated the wild oscillations, although these have now been replaced with large scale, smaller amplitude, oscillations. These variations do not align with any of the features of the DFM cut, suggesting they are purely artifacts of the MI-RLS$_\text{s}$. The overall structure, however, has been resolved and, like the DFM, presents a sharp discontinuity at the shock layer boundary.
+
+
+% % % % % % %
+%  Remarks  %
+% % % % % % %
+\subsection{Remarks}
+Application of the MI-RLS to experimental data has demonstrated that this technique can offer advantages over the\linebreak DFM. In particular, the resolution of features not accessible by the DFM, such as behind shadowed regions. The MI-RLS$_\text{s}$ is able to compensate, somewhat, for noise in the data where the MI-RLS is highly sensitive to the quality of the data.
+
+The reconstructions in this section also reveal a shortcoming of the current MI-RLS algorithm; in particular, its sensitivity to noise, meaning that quantitative calculations on experimental data should not rely solely on this technique, but should be complimented by methods that have been more widely tested in this field, and capable of utilising the full resolution of the experimental measurements.
+
+
+%% Conclusion
+\section{Conclusion}\label{section_conclusion}
+This paper has presented a tomographic inversion method, MI-RLS, that is capable of reconstructions previously not possible using the Direct Fourier Method. Section~\ref{section_phantoms3d} has\linebreak shown how this technique is superior to the DFM in many ways. Not only did the reconstructions display better visual features than for the DFM, but quantitative comparison with the original phantoms was also better.
+
+Upon stress testing with the introduction of noise it was shown that with the smoothing regularisation the MI-RLS$_\text{s}$ suppresses the errors due to the noise, and maintains the effectiveness of the reconstruction technique.Without smoothing, however, the MI-RLS propagates the noise through to the final reconstructions in a non-linear manner, by creating an incompatible matrix system, increasing according to the amount of noise present in the projections, meaning that without smoothing the MI-RLS cannot be relied upon to work with noisy data.
+
+In Section~\ref{section_experimental}, the MI-RLS/MI-RLS$_\text{s}$ was applied to two sets of experimental measurements. Although the resolution of the phase data needed to be reduced, it was clearly demonstrated that the flow features of both experiments were generally well resolved when compared with the DFM reconstructions. In particular, the density of the flow around the body of the test objects has been resolved in three dimensions for the first time.
+
+Shock layer interfaces have also been well resolved by the MI-RLS, offering comparable results to the DFM, which is able to utilise much higher resolution data.
+
+The MI-RLS reconstruction for the flow over the \emph{hyperboloid} model in \S\ref{hyperboloid_sect}, however, showed that the technique contains a significant deficiency which emerges in unfavourable situations. This deficiency can be somewhat suppressed by using the smoothing regularisation. In such situations it is highly recommended to use the MI-RLS$_\text{s}$ in tandem with the DFM or other robust reconstruction techniques.
+
+In this paper, application of the MI-RLS has utilised rectangular grid structures. Further work utilising nonrectangular structured grids will, potentially, allow better resolution of shock features. This can be done by creating grids that have a high density of grids cells close to where the shock interface is expected to be, and a lower density of cells in the freestream regions, much like would be done for CFD calculations. Further to this is the possibility of using unstructured grids.
+
+In conclusion, the MI-RLS reconstruction technique developed and demonstrated in this project has proven useful for the reconstruction of shock layer flows. The MI-RLS opens up the possibility of gaining further insight into fluid dynamics by virtue of the versatility of the technique.
+
+
+\begin{acknowledgements}
+  The computing component of this work was supported by the National Facility of the Australian Partnership for Advanced Computing, \href{http://nf.apac.edu.au/}{{h}ttp://nf.apac.edu.au/}. The experimental component of the research was supported by The Sir Ross and Sir Keith Smith fund and the Australian Research Council.
+\end{acknowledgements}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Here begins the end matter
+
+\nocite{hackbusch}
+\nocite{zhang:fujiwara:komurasaki}
+
+\bibliographystyle{spmpsci}
+\bibliography{Faletic}
+
+\end{document}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "paper"
+%%% End:
