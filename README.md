@@ -1,8 +1,8 @@
-# README #
+# Rado’s PhD papers
 
 This repository contains LaTeX code to compile various scientific papers connected to [Rado Faletič’s PhD thesis](https://doi.org/10.25911/5d7a2a41cea7c).
 
-### Interferometric measurement of an axi-symmetric density field, 1999 ###
+### Interferometric measurement of an axi-symmetric density field, 1999
 
 Published as part of the Proceedings of the _2<sup>nd</sup> Australian Conference on Laser Diagnostics in Fluid Mechanics and Combustion_ (Monash University, 9-10 December 1999), which can be read at [hdl.handle.net/10440/1256](https://hdl.handle.net/10440/1256).
 
@@ -10,7 +10,7 @@ Published as part of the Proceedings of the _2<sup>nd</sup> Australian Conferenc
 
 The paper’s files are contained in the `acldfmc-1999/` directory. Simply enter that directory and type `make all` to generate the paper as `abel.pdf`.
 
-### Tomographic reconstruction of shock layer flows, 2007 ###
+### Tomographic reconstruction of shock layer flows, 2007
 
 This paper was published in the _Shock Waves_ journal on 31 July 2007. It can be read at [doi:10.1007/s00193-007-0098-6](https://doi.org/10.1007/s00193-007-0098-6).
 
