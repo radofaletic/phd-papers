@@ -4,7 +4,7 @@ This repository contains LaTeX code to compile various scientific papers connect
 
 ### Interferometric measurement of an axi-symmetric density field, 1999
 
-Published as part of the Proceedings of the _2<sup>nd</sup> Australian Conference on Laser Diagnostics in Fluid Mechanics and Combustion_ (Monash University, 9-10 December 1999), which can be read at [hdl.handle.net/10440/1256](https://hdl.handle.net/10440/1256).
+Published as part of the _Proceedings of the 2<sup>nd</sup> Australian Conference on Laser Diagnostics in Fluid Mechanics and Combustion_ (Monash University, 9-10 December 1999), which can be read at [doi:10440/1256](https://doi.org/10440/1256).
 
 > We have used Fourier transform techniques and an Abel deconvolution to analyse a finite-fringe interferogram produced by an axisymmetric shock wave flow, to produce a density map that can be used for the validation of a numerical model. The Abel deconvolution method enables the use of a basis that is particularly suitable for modeling phase maps produced by shock wave flows. A steady flow problem is studied, and compared with a numerical simulation. Good agreement between theoretical and experimental results are obtained.
 
